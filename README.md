@@ -1,17 +1,47 @@
-# Kế Hoạch Bán Hàng D2D
+# Hệ thống quản lý Campaign bán hàng D2D
 
-Ứng dụng Streamlit lập kế hoạch bán hàng theo điểm (Ubicacion) và nhân lực (PR/Grupo) cho từng BC/Branch, mô phỏng quy trình của file `Campana Plan.xlsx`.
+Ứng dụng Streamlit để **lập, theo dõi và đóng các chương trình bán hàng (campaign)** theo từng vị trí (Ubicacion) và nguồn lực (PR/Grupo) — mô phỏng workflow của file `Campana Plan.xlsx`.
 
-## Tính năng
+## Mô hình
 
-- **CRUD Ubicacion**: quản lý các điểm bán (CP) với toạ độ GPS, lịch traffic, ưu tiên, Meta/Gasto/Merchandising.
-- **CRUD PR/Grupo**: quản lý promoter, nhóm làm việc, KPI, số ngày làm việc tối đa.
-- **Plan Generator**: sinh lịch tháng tự động theo:
-  - Ưu tiên (Prioridad) — vị trí ưu tiên thấp được bán trước.
-  - Lịch traffic (WEEKDAY / WEEKEND / ngày cụ thể trong tuần).
-  - Ràng buộc nguồn lực (PR cùng BC, không vượt `Cantidad Día Trabajo`).
-- **Dashboard**: thống kê Meta vs Resultado, phân bố theo BC, coverage, chi phí.
-- **Excel I/O**: import dữ liệu từ file `Campana Plan.xlsx`, export lịch ra Excel.
+- **Ubicacion** — danh mục điểm bán (CP01…) với GPS, lịch traffic, Meta/Gasto/Merch mặc định.
+- **PR / Grupo** — danh sách promoter, nhóm làm việc, KPI, capacity ngày/tháng.
+- **Campaign** — 1 chương trình bán hàng tại 1 vị trí vào 1 ngày, có:
+  - mã `CMP-YYYYMM-CPxx-NN`, tên, PR phân công, leader, grupo
+  - Meta (chỉ tiêu), Gasto (chi phí), Merchandising kế hoạch
+  - **Trạng thái** (status): `DRAFT → PLANNED → RUNNING → DONE` (hoặc `CANCELLED`)
+  - Mọi thay đổi trạng thái được ghi log (`campaign_log`)
+- **Campaign Result** — kết quả thực tế + checklist khi đóng campaign.
+
+```
+DRAFT → PLANNED → RUNNING → DONE
+            ↓        ↓
+        CANCELLED  CANCELLED
+```
+
+## Các trang
+
+| Trang | Mục đích |
+|---|---|
+| 📍 **Ubicacion** | CRUD điểm bán (form + bulk editor) |
+| 👥 **PR / Grupo** | CRUD nhân lực |
+| ⚙️ **Plan Generator** | Sinh hàng loạt campaign DRAFT cho 1 tháng theo prioridad + lịch traffic + ràng buộc nguồn lực |
+| 🎯 **Campaigns** | Danh sách / Kanban / Lịch / chuyển trạng thái / xem log |
+| 📝 **Campaign Form** | Tạo / sửa 1 campaign thủ công (form đầy đủ Meta + Gasto + Merch) |
+| ✅ **Resultados** | Ghi nhận kết quả + checklist, đóng campaign sang DONE |
+| 📊 **Dashboard** | Funnel trạng thái, phân bố ngày/BC, Meta vs Resultado, chi phí, tải PR, map |
+| 📂 **Import/Export** | Import master từ file Excel mẫu, export campaign/result tháng |
+
+## Thuật toán Plan Generator
+
+Sinh DRAFT campaigns cho 1 tháng bằng 4 pass (ưu tiên trước bán trước):
+
+1. **Pass 1** — `prioridad` thấp được xếp trước; ngày khớp `Fecha Alta Traffico`; PR cùng BC.
+2. **Pass 2** — nếu thiếu PR cùng BC, cho phép PR khác BC (ghi chú vào campaign).
+3. **Pass 3** — vẫn thiếu? cho phép ngày ngoài lịch traffic, ưu tiên PR cùng BC.
+4. **Pass 4** — không có PR phù hợp → tạo campaign chưa phân công, để team tự gán.
+
+Mỗi PR không vượt `cantidad_dia_trabajo`; mỗi (PR, ngày) tối đa 1 ca; mỗi (Ubicacion, ngày) tối đa 1 campaign.
 
 ## Cài đặt
 
@@ -20,20 +50,25 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-## Cấu trúc
+DB SQLite tự tạo trong `data/app.db`.
+
+## Cấu trúc code
 
 ```
-app.py              # Trang Home + navigation
-pages/
-  1_Ubicacion.py    # Quản lý điểm bán
-  2_PR_Grupo.py     # Quản lý promoter
-  3_Plan.py         # Sinh kế hoạch
-  4_Dashboard.py    # Báo cáo thống kê
-  5_Import_Export.py # Import/Export Excel
+app.py                       # Home page
 lib/
-  db.py             # SQLite layer
-  planner.py        # Thuật toán sinh lịch
-  excel_io.py       # Đọc/ghi Excel
-data/
-  app.db            # SQLite database (auto-generated)
+  db.py                      # SQLite schema + helpers
+  campaign.py                # CRUD + state machine
+  planner.py                 # Thuật toán sinh DRAFT campaigns
+  excel_io.py                # Import/Export Excel
+pages/
+  1_Ubicacion.py
+  2_PR_Grupo.py
+  3_Campaigns.py             # List / Kanban / Calendar / Status
+  4_Campaign_Form.py         # Form tạo/sửa
+  5_Plan_Generator.py
+  6_Resultados.py
+  7_Dashboard.py
+  8_Import_Export.py
+data/app.db                  # SQLite (auto-gen, gitignored)
 ```

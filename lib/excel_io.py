@@ -1,21 +1,20 @@
-"""Đọc/ghi file Excel theo định dạng Campana Plan.xlsx."""
+"""Đọc/ghi file Excel cho hệ thống quản lý campaign."""
 from __future__ import annotations
 
 import io
-from pathlib import Path
 
 import openpyxl
 import pandas as pd
 
-from . import db
+from . import campaign, db
 
 
-# ---------- Import ----------
+# ---------- Import master data ----------
 
-def import_excel(file_like) -> dict:
-    """Đọc file Excel kế hoạch và import vào DB.
-
-    Trả về dict đếm số dòng import.
+def import_master_xlsx(file_like) -> dict:
+    """Đọc Excel mẫu Campana Plan.xlsx và import 2 sheet master:
+    `Ubicacion` và `PR Grupo`. Không tạo campaign ở bước này — dùng
+    Plan Generator để sinh DRAFT campaign sau khi import master.
     """
     wb = openpyxl.load_workbook(file_like, data_only=True)
     counts = {"ubicacion": 0, "promoter": 0}
@@ -37,9 +36,7 @@ def _import_ubicacion(ws) -> int:
     rows = []
     for r in ws.iter_rows(min_row=3, values_only=True):
         code = _cell(r, 1)
-        if not code or not isinstance(code, str):
-            continue
-        if not str(code).strip():
+        if not code or not isinstance(code, str) or not str(code).strip():
             continue
         row = {
             "code": str(code).strip(),
@@ -126,28 +123,30 @@ def _int(v, default: int = 0) -> int:
 
 # ---------- Export ----------
 
-def export_plan_xlsx(month: str) -> bytes:
-    """Xuất kế hoạch tháng (YYYY-MM) ra Excel."""
-    plan = db.list_plan(month)
+def export_campaigns_xlsx(month: str) -> bytes:
+    """Xuất campaign + result của tháng (YYYY-MM) ra Excel nhiều sheet."""
+    camps = campaign.list_campaigns(month=month)
+    results = campaign.list_results_with_campaign(month=month)
     ubic = db.list_ubicacion()
     prs = db.list_promoter()
 
     buf = io.BytesIO()
     with pd.ExcelWriter(buf, engine="openpyxl") as writer:
-        if not plan.empty:
-            plan.to_excel(writer, sheet_name="Plan", index=False)
-            # Pivot: rows=ubicacion, cols=date, val=pr_code
-            pivot = plan.pivot_table(
-                index="ubicacion_code",
+        if not camps.empty:
+            camps.to_excel(writer, sheet_name="Campaigns", index=False)
+            pivot = camps.pivot_table(
+                index=["bc", "ubicacion_code"],
                 columns="fecha",
-                values="pr_code",
+                values="status",
                 aggfunc="first",
             ).fillna("")
-            pivot.to_excel(writer, sheet_name="Pivot")
+            pivot.to_excel(writer, sheet_name="Calendar")
         else:
-            pd.DataFrame({"info": ["Chưa có plan"]}).to_excel(
-                writer, sheet_name="Plan", index=False
+            pd.DataFrame({"info": ["Chưa có campaign"]}).to_excel(
+                writer, sheet_name="Campaigns", index=False
             )
+        if not results.empty:
+            results.to_excel(writer, sheet_name="Results", index=False)
         ubic.to_excel(writer, sheet_name="Ubicacion", index=False)
         prs.to_excel(writer, sheet_name="PR Grupo", index=False)
     buf.seek(0)
