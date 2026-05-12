@@ -566,13 +566,12 @@
     </div>
   </div>
 
-  <!-- GANTT -->
+  <!-- PROJECT GANTT (MS Project style) -->
   <div id="screen-gantt" class="screen">
     <div class="bg-white rounded-xl shadow-sm p-6">
-      <h2 class="text-lg font-bold">📈 Gantt — kế hoạch bán hàng theo thời gian</h2>
-      <p class="text-sm text-slate-500 mt-1">Mỗi ô = 1 campaign trong 1 ngày. Màu theo trạng thái. 3 góc nhìn: theo vị trí, theo đội, theo BC.</p>
+      <h2 class="text-lg font-bold">📈 Project Gantt — MS Project style</h2>
+      <p class="text-sm text-slate-500 mt-1">Mỗi vị trí (Ubicacion) = 1 task có Start / End / Duration / Nguồn lực / Tiến độ. Tự phát hiện xung đột.</p>
 
-      <!-- Filters mockup -->
       <div class="grid grid-cols-4 gap-3 mt-4 text-sm">
         <label>Năm<br/><input class="border rounded w-full px-2 py-1" value="2026"/></label>
         <label>Tháng<br/><input class="border rounded w-full px-2 py-1" value="5"/></label>
@@ -580,290 +579,358 @@
         <label>Status<br/><input class="border rounded w-full px-2 py-1" value="Tất cả"/></label>
       </div>
 
-      <div class="flex gap-2 mt-4 text-sm border-b">
-        <div class="px-3 py-2 border-b-2 border-blue-600 text-blue-700 font-semibold">📍 Theo vị trí</div>
-        <div class="px-3 py-2 text-slate-500">👥 Theo Grupo</div>
-        <div class="px-3 py-2 text-slate-500">🏢 Theo BC</div>
-        <div class="px-3 py-2 text-slate-500">🧑 Theo Promoter</div>
+      <div class="grid grid-cols-6 gap-2 mt-4 text-xs">
+        <div class="border rounded p-2"><div>Tổng task</div><b class="text-lg">81</b></div>
+        <div class="border rounded p-2"><div>Tổng ca</div><b class="text-lg">83</b></div>
+        <div class="border rounded p-2"><div>Hoàn tất</div><b class="text-lg text-green-600">23</b></div>
+        <div class="border rounded p-2"><div>Đang chạy</div><b class="text-lg text-amber-600">5</b></div>
+        <div class="border rounded p-2"><div>Tiến độ TB</div><b class="text-lg">38%</b></div>
+        <div class="border rounded p-2 bg-red-50"><div>Xung đột</div><b class="text-lg text-red-600">7</b></div>
       </div>
 
-      <!-- Legend -->
-      <div class="flex flex-wrap gap-3 mt-3 text-xs">
-        <span class="inline-flex items-center gap-1"><span class="inline-block w-4 h-3 rounded" style="background:#9ca3af"></span> DRAFT</span>
-        <span class="inline-flex items-center gap-1"><span class="inline-block w-4 h-3 rounded" style="background:#3b82f6"></span> PLANNED</span>
-        <span class="inline-flex items-center gap-1"><span class="inline-block w-4 h-3 rounded" style="background:#f59e0b"></span> RUNNING</span>
-        <span class="inline-flex items-center gap-1"><span class="inline-block w-4 h-3 rounded" style="background:#10b981"></span> DONE</span>
-        <span class="inline-flex items-center gap-1"><span class="inline-block w-4 h-3 rounded" style="background:#ef4444"></span> CANCELLED</span>
+      <div class="flex gap-2 mt-5 border-b">
+        <div class="px-3 py-2 border-b-2 border-blue-600 text-blue-700 font-semibold text-sm">📋 Task table</div>
+        <div class="px-3 py-2 text-slate-500 text-sm">📊 Gantt biểu đồ</div>
+        <div class="px-3 py-2 text-slate-500 text-sm">🧑 Tải nguồn lực</div>
+        <div class="px-3 py-2 text-slate-500 text-sm">⚠️ Xung đột</div>
       </div>
 
-      <!-- Gantt: by location -->
-      <h3 class="font-semibold text-sm mt-5">📍 Gantt theo vị trí (Ubicacion)</h3>
-      <div class="border rounded-lg overflow-hidden mt-2">
-        <!-- Header: 31 days -->
-        <div class="grid bg-slate-100 text-[10px] text-center text-slate-600 border-b" style="grid-template-columns: 120px repeat(31, minmax(0, 1fr));">
-          <div class="px-2 py-1 text-left font-semibold border-r">Ubicacion</div>
-          <!-- days 1..31 -->
-          <div class="py-1 border-r">1</div><div class="py-1 border-r">2</div>
-          <div class="py-1 border-r">3</div><div class="py-1 border-r">4</div>
-          <div class="py-1 border-r">5</div><div class="py-1 border-r">6</div>
-          <div class="py-1 border-r">7</div><div class="py-1 border-r">8</div>
-          <div class="py-1 border-r">9</div><div class="py-1 border-r">10</div>
-          <div class="py-1 border-r">11</div><div class="py-1 border-r">12</div>
-          <div class="py-1 border-r">13</div><div class="py-1 border-r">14</div>
-          <div class="py-1 border-r">15</div><div class="py-1 border-r">16</div>
-          <div class="py-1 border-r">17</div><div class="py-1 border-r">18</div>
-          <div class="py-1 border-r">19</div><div class="py-1 border-r">20</div>
-          <div class="py-1 border-r">21</div><div class="py-1 border-r">22</div>
-          <div class="py-1 border-r">23</div><div class="py-1 border-r">24</div>
-          <div class="py-1 border-r">25</div><div class="py-1 border-r">26</div>
-          <div class="py-1 border-r">27</div><div class="py-1 border-r">28</div>
-          <div class="py-1 border-r">29</div><div class="py-1 border-r">30</div>
-          <div class="py-1">31</div>
-        </div>
-
-        <!-- Rows: each row = 1 Ubicacion -->
-        <!-- Use a script-less approach: each row has empty 31 cells, plus a single bar absolutely positioned by day -->
-        <style>
-          .gantt-row { display:grid; grid-template-columns: 120px repeat(31, minmax(0, 1fr)); border-bottom:1px solid #f1f5f9; }
-          .gantt-row > div { border-right:1px solid #f8fafc; height:22px; }
-          .gantt-row > .label { font-size:11px; padding:3px 8px; border-right:1px solid #e5e7eb; background:#fafafa; }
-          .bar { margin:3px 1px; border-radius:3px; height:16px; }
-          .b-d { background:#9ca3af; }
-          .b-p { background:#3b82f6; }
-          .b-r { background:#f59e0b; }
-          .b-o { background:#10b981; }
-          .b-c { background:#ef4444; }
-        </style>
-
-        <div class="gantt-row"><div class="label"><b>CP01</b> · BC12</div>
-          <div></div><div></div><div></div><div class="bar b-o"></div><div></div><div></div><div></div><div></div><div></div><div></div>
-          <div class="bar b-o"></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div class="bar b-p"></div><div></div>
-          <div></div><div></div><div></div><div></div><div class="bar b-p"></div><div></div><div></div><div></div><div></div><div></div><div></div>
-        </div>
-        <div class="gantt-row"><div class="label"><b>CP02</b> · BC11</div>
-          <div></div><div class="bar b-o"></div><div></div><div></div><div></div><div></div><div></div><div></div><div class="bar b-o"></div><div></div>
-          <div></div><div></div><div></div><div></div><div></div><div class="bar b-p"></div><div></div><div></div><div></div><div></div>
-          <div></div><div></div><div class="bar b-p"></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
-        </div>
-        <div class="gantt-row"><div class="label"><b>CP03</b> · BC06</div>
-          <div></div><div></div><div class="bar b-o"></div><div></div><div></div><div></div><div></div><div></div><div></div><div class="bar b-o"></div>
-          <div></div><div></div><div></div><div></div><div></div><div></div><div class="bar b-r"></div><div></div><div></div><div></div>
-          <div></div><div></div><div></div><div class="bar b-p"></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
-        </div>
-        <div class="gantt-row"><div class="label"><b>CP07</b> · BC06</div>
-          <div></div><div></div><div></div><div></div><div></div><div class="bar b-o"></div><div></div><div></div><div></div><div></div>
-          <div></div><div class="bar b-r"></div><div></div><div></div><div></div><div></div><div></div><div></div><div class="bar b-p"></div><div></div>
-          <div></div><div></div><div></div><div></div><div></div><div class="bar b-p"></div><div></div><div></div><div></div><div></div><div></div>
-        </div>
-        <div class="gantt-row"><div class="label"><b>CP12</b> · BC13</div>
-          <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
-          <div></div><div class="bar b-r"></div><div></div><div></div><div></div><div></div><div></div><div></div><div class="bar b-p"></div><div></div>
-          <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div class="bar b-d"></div><div></div><div></div><div></div>
-        </div>
-        <div class="gantt-row"><div class="label"><b>CP17</b> · BC08</div>
-          <div></div><div></div><div class="bar b-c"></div><div></div><div></div><div></div><div></div><div></div><div></div><div class="bar b-o"></div>
-          <div></div><div></div><div></div><div></div><div></div><div></div><div class="bar b-p"></div><div></div><div></div><div></div>
-          <div></div><div></div><div></div><div class="bar b-p"></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
-        </div>
-        <div class="gantt-row"><div class="label"><b>CP22</b> · BC11x</div>
-          <div></div><div></div><div></div><div></div><div class="bar b-o"></div><div></div><div></div><div></div><div></div><div></div>
-          <div></div><div class="bar b-p"></div><div></div><div></div><div></div><div></div><div></div><div></div><div class="bar b-p"></div><div></div>
-          <div></div><div></div><div></div><div></div><div></div><div></div><div class="bar b-d"></div><div></div><div></div><div></div><div></div>
-        </div>
-        <div class="gantt-row"><div class="label"><b>CP41</b> · BC06</div>
-          <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div class="bar b-d"></div><div></div><div></div>
-          <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div class="bar b-d"></div><div></div><div></div>
-          <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
-        </div>
-        <div class="gantt-row"><div class="label"><b>CP55</b> · BC08</div>
-          <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div class="bar b-d"></div>
-          <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
-          <div></div><div class="bar b-d"></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
-        </div>
-        <div class="px-3 py-2 text-xs text-slate-400 italic">… 72 vị trí khác</div>
+      <h3 class="font-semibold text-sm mt-4">📋 Task table — mỗi dòng = 1 task</h3>
+      <div class="overflow-x-auto mt-2 border rounded">
+        <table class="w-full text-xs">
+          <thead class="bg-slate-100 text-left">
+            <tr>
+              <th class="p-2">Vị trí</th><th>BC</th><th>Distrito</th><th>Prio</th>
+              <th>Start</th><th>End</th><th>Dur</th>
+              <th>Tổng</th><th>DONE</th><th>RUN</th><th>PLAN</th>
+              <th>Nguồn lực</th><th>#PR</th><th>% Tiến độ</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="border-t hover:bg-slate-50">
+              <td class="p-2 font-mono">CP01</td><td>LI3BC12</td><td>SURCO</td><td>1</td>
+              <td>04/05</td><td>25/05</td><td>4</td>
+              <td>4</td><td class="text-green-600 font-semibold">2</td><td>0</td><td>2</td>
+              <td class="text-slate-600">LI3PR10136</td><td>1</td>
+              <td><div class="bg-slate-200 rounded h-3 w-32 relative">
+                <div class="bg-green-500 h-3 rounded" style="width:50%"></div>
+                <span class="absolute inset-0 text-[10px] text-center text-white font-bold">50%</span></div></td>
+            </tr>
+            <tr class="border-t hover:bg-slate-50">
+              <td class="p-2 font-mono">CP02</td><td>LI3BC11</td><td>SJM 2</td><td>1</td>
+              <td>02/05</td><td>23/05</td><td>5</td>
+              <td>5</td><td class="text-green-600 font-semibold">1</td><td>0</td><td>3</td>
+              <td class="text-slate-600">LI3PR10202</td><td>1</td>
+              <td><div class="bg-slate-200 rounded h-3 w-32 relative">
+                <div class="bg-amber-500 h-3 rounded" style="width:20%"></div>
+                <span class="absolute inset-0 text-[10px] text-center text-white font-bold">20%</span></div></td>
+            </tr>
+            <tr class="border-t hover:bg-slate-50">
+              <td class="p-2 font-mono">CP03</td><td>LI3BC06</td><td>SURCO</td><td>1</td>
+              <td>03/05</td><td>24/05</td><td>4</td>
+              <td>4</td><td class="text-green-600 font-semibold">3</td><td>1</td><td>0</td>
+              <td class="text-slate-600">LI3PR10139, LI3PR10146</td><td>2</td>
+              <td><div class="bg-slate-200 rounded h-3 w-32 relative">
+                <div class="bg-green-500 h-3 rounded" style="width:75%"></div>
+                <span class="absolute inset-0 text-[10px] text-center text-white font-bold">75%</span></div></td>
+            </tr>
+            <tr class="border-t hover:bg-slate-50">
+              <td class="p-2 font-mono">CP07</td><td>LI3BC06</td><td>SURCO</td><td>1</td>
+              <td>06/05</td><td>26/05</td><td>4</td>
+              <td>4</td><td class="text-green-600 font-semibold">2</td><td>1</td><td>1</td>
+              <td class="text-slate-600">LI3PR10139</td><td>1</td>
+              <td><div class="bg-slate-200 rounded h-3 w-32 relative">
+                <div class="bg-green-500 h-3 rounded" style="width:50%"></div>
+                <span class="absolute inset-0 text-[10px] text-center text-white font-bold">50%</span></div></td>
+            </tr>
+            <tr class="border-t hover:bg-slate-50">
+              <td class="p-2 font-mono">CP12</td><td>LI2BC13</td><td>SAN BORJA</td><td>1</td>
+              <td>12/05</td><td>19/05</td><td>2</td>
+              <td>2</td><td>0</td><td class="text-amber-600 font-semibold">1</td><td>1</td>
+              <td class="text-slate-600">LI3PR10204</td><td>1</td>
+              <td><div class="bg-slate-200 rounded h-3 w-32 relative">
+                <div class="bg-red-500 h-3 rounded" style="width:0%"></div>
+                <span class="absolute inset-0 text-[10px] text-center text-slate-600 font-bold">0%</span></div></td>
+            </tr>
+            <tr class="border-t hover:bg-slate-50">
+              <td class="p-2 font-mono">CP17</td><td>LI3BC08</td><td>MIRAFLORES</td><td>2</td>
+              <td>10/05</td><td>24/05</td><td>3</td>
+              <td>3</td><td class="text-green-600 font-semibold">2</td><td>0</td><td>0</td>
+              <td class="text-slate-600">LI3PR10081</td><td>1</td>
+              <td><div class="bg-slate-200 rounded h-3 w-32 relative">
+                <div class="bg-amber-500 h-3 rounded" style="width:67%"></div>
+                <span class="absolute inset-0 text-[10px] text-center text-white font-bold">67%</span></div></td>
+            </tr>
+            <tr class="border-t hover:bg-slate-50 bg-red-50">
+              <td class="p-2 font-mono">CP41</td><td>LI3BC06</td><td>SURCO</td><td>2</td>
+              <td>08/05</td><td>18/05</td><td>2</td>
+              <td>2</td><td>0</td><td>0</td><td>0</td>
+              <td class="text-red-600 italic">— chưa gán PR —</td><td>0</td>
+              <td><div class="bg-slate-200 rounded h-3 w-32 relative">
+                <div class="bg-red-400 h-3 rounded" style="width:0%"></div>
+                <span class="absolute inset-0 text-[10px] text-center text-slate-600 font-bold">0%</span></div></td>
+            </tr>
+            <tr><td colspan="14" class="p-2 text-center text-slate-400 italic">… 74 task khác</td></tr>
+          </tbody>
+        </table>
       </div>
 
-      <!-- Gantt: by BC -->
-      <h3 class="font-semibold text-sm mt-6">🏢 Gantt theo BC (rút gọn)</h3>
-      <div class="border rounded-lg overflow-hidden mt-2">
-        <div class="grid bg-slate-100 text-[10px] text-center text-slate-600 border-b" style="grid-template-columns: 120px repeat(31, minmax(0, 1fr));">
-          <div class="px-2 py-1 text-left font-semibold border-r">BC</div>
-          <div class="py-1 border-r">1</div><div class="py-1 border-r">2</div>
-          <div class="py-1 border-r">3</div><div class="py-1 border-r">4</div>
-          <div class="py-1 border-r">5</div><div class="py-1 border-r">6</div>
-          <div class="py-1 border-r">7</div><div class="py-1 border-r">8</div>
-          <div class="py-1 border-r">9</div><div class="py-1 border-r">10</div>
-          <div class="py-1 border-r">11</div><div class="py-1 border-r">12</div>
-          <div class="py-1 border-r">13</div><div class="py-1 border-r">14</div>
-          <div class="py-1 border-r">15</div><div class="py-1 border-r">16</div>
-          <div class="py-1 border-r">17</div><div class="py-1 border-r">18</div>
-          <div class="py-1 border-r">19</div><div class="py-1 border-r">20</div>
-          <div class="py-1 border-r">21</div><div class="py-1 border-r">22</div>
-          <div class="py-1 border-r">23</div><div class="py-1 border-r">24</div>
-          <div class="py-1 border-r">25</div><div class="py-1 border-r">26</div>
-          <div class="py-1 border-r">27</div><div class="py-1 border-r">28</div>
-          <div class="py-1 border-r">29</div><div class="py-1 border-r">30</div>
-          <div class="py-1">31</div>
-        </div>
-        <div class="gantt-row"><div class="label"><b>LI3BC03</b></div>
-          <div class="bar b-o"></div><div></div><div class="bar b-o"></div><div></div><div class="bar b-o"></div><div></div><div></div><div class="bar b-o"></div><div></div><div class="bar b-o"></div>
-          <div></div><div class="bar b-r"></div><div></div><div class="bar b-r"></div><div></div><div class="bar b-p"></div><div></div><div class="bar b-p"></div><div></div><div class="bar b-p"></div>
-          <div></div><div class="bar b-p"></div><div></div><div class="bar b-p"></div><div></div><div class="bar b-d"></div><div></div><div class="bar b-d"></div><div></div><div class="bar b-d"></div><div></div>
-        </div>
-        <div class="gantt-row"><div class="label"><b>LI3BC06</b></div>
-          <div></div><div class="bar b-o"></div><div class="bar b-o"></div><div></div><div></div><div class="bar b-o"></div><div class="bar b-o"></div><div></div><div class="bar b-o"></div><div></div>
-          <div class="bar b-r"></div><div class="bar b-r"></div><div></div><div class="bar b-p"></div><div></div><div class="bar b-p"></div><div class="bar b-p"></div><div></div><div class="bar b-p"></div><div class="bar b-p"></div>
-          <div></div><div class="bar b-p"></div><div></div><div class="bar b-d"></div><div class="bar b-d"></div><div></div><div class="bar b-d"></div><div></div><div class="bar b-d"></div><div></div><div></div>
-        </div>
-        <div class="gantt-row"><div class="label"><b>LI3BC08</b></div>
-          <div></div><div></div><div class="bar b-c"></div><div class="bar b-o"></div><div></div><div class="bar b-o"></div><div></div><div></div><div class="bar b-o"></div><div class="bar b-o"></div>
-          <div></div><div class="bar b-r"></div><div class="bar b-p"></div><div></div><div class="bar b-p"></div><div class="bar b-p"></div><div class="bar b-p"></div><div></div><div></div><div class="bar b-p"></div>
-          <div></div><div></div><div class="bar b-p"></div><div class="bar b-p"></div><div class="bar b-p"></div><div></div><div></div><div class="bar b-d"></div><div></div><div class="bar b-d"></div><div></div>
-        </div>
-        <div class="gantt-row"><div class="label"><b>LI3BC11</b></div>
-          <div></div><div class="bar b-o"></div><div></div><div></div><div class="bar b-o"></div><div></div><div class="bar b-o"></div><div></div><div class="bar b-o"></div><div></div>
-          <div class="bar b-r"></div><div></div><div class="bar b-p"></div><div></div><div class="bar b-p"></div><div></div><div class="bar b-p"></div><div></div><div class="bar b-p"></div><div></div>
-          <div class="bar b-d"></div><div></div><div class="bar b-d"></div><div></div><div class="bar b-d"></div><div></div><div></div><div></div><div></div><div></div><div></div>
-        </div>
-        <div class="gantt-row"><div class="label"><b>LI3BC12</b></div>
-          <div></div><div></div><div></div><div class="bar b-o"></div><div></div><div></div><div></div><div></div><div></div><div></div>
-          <div class="bar b-o"></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div class="bar b-p"></div><div></div>
-          <div></div><div></div><div></div><div></div><div class="bar b-p"></div><div></div><div></div><div></div><div></div><div></div><div></div>
-        </div>
-        <div class="gantt-row"><div class="label"><b>LI2BC13</b></div>
-          <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div class="bar b-o"></div><div></div><div></div>
-          <div></div><div class="bar b-r"></div><div></div><div class="bar b-p"></div><div></div><div></div><div></div><div></div><div class="bar b-p"></div><div></div>
-          <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div class="bar b-d"></div><div></div><div></div><div></div>
-        </div>
-      </div>
-
-      <!-- Gantt: by Grupo -->
-      <h3 class="font-semibold text-sm mt-6">👥 Gantt theo Grupo / đội</h3>
-      <div class="border rounded-lg overflow-hidden mt-2">
-        <div class="grid bg-slate-100 text-[10px] text-center text-slate-600 border-b" style="grid-template-columns: 120px repeat(31, minmax(0, 1fr));">
-          <div class="px-2 py-1 text-left font-semibold border-r">Grupo</div>
-          <div class="py-1 border-r">1</div><div class="py-1 border-r">2</div>
-          <div class="py-1 border-r">3</div><div class="py-1 border-r">4</div>
-          <div class="py-1 border-r">5</div><div class="py-1 border-r">6</div>
-          <div class="py-1 border-r">7</div><div class="py-1 border-r">8</div>
-          <div class="py-1 border-r">9</div><div class="py-1 border-r">10</div>
-          <div class="py-1 border-r">11</div><div class="py-1 border-r">12</div>
-          <div class="py-1 border-r">13</div><div class="py-1 border-r">14</div>
-          <div class="py-1 border-r">15</div><div class="py-1 border-r">16</div>
-          <div class="py-1 border-r">17</div><div class="py-1 border-r">18</div>
-          <div class="py-1 border-r">19</div><div class="py-1 border-r">20</div>
-          <div class="py-1 border-r">21</div><div class="py-1 border-r">22</div>
-          <div class="py-1 border-r">23</div><div class="py-1 border-r">24</div>
-          <div class="py-1 border-r">25</div><div class="py-1 border-r">26</div>
-          <div class="py-1 border-r">27</div><div class="py-1 border-r">28</div>
-          <div class="py-1 border-r">29</div><div class="py-1 border-r">30</div>
-          <div class="py-1">31</div>
-        </div>
-        <div class="gantt-row"><div class="label"><b>Grupo 1</b></div>
-          <div class="bar b-o"></div><div class="bar b-o"></div><div class="bar b-o"></div><div class="bar b-o"></div><div></div><div class="bar b-o"></div><div></div><div class="bar b-o"></div><div class="bar b-o"></div><div class="bar b-o"></div>
-          <div class="bar b-r"></div><div class="bar b-r"></div><div class="bar b-r"></div><div class="bar b-p"></div><div class="bar b-p"></div><div></div><div class="bar b-p"></div><div class="bar b-p"></div><div class="bar b-p"></div><div class="bar b-p"></div>
-          <div class="bar b-p"></div><div class="bar b-p"></div><div class="bar b-d"></div><div class="bar b-d"></div><div class="bar b-d"></div><div class="bar b-d"></div><div class="bar b-d"></div><div class="bar b-d"></div><div></div><div></div><div></div>
-        </div>
-        <div class="gantt-row"><div class="label"><b>Grupo 2</b></div>
-          <div></div><div class="bar b-o"></div><div class="bar b-o"></div><div></div><div class="bar b-o"></div><div class="bar b-o"></div><div></div><div class="bar b-o"></div><div class="bar b-o"></div><div></div>
-          <div class="bar b-r"></div><div class="bar b-r"></div><div></div><div class="bar b-p"></div><div class="bar b-p"></div><div class="bar b-p"></div><div></div><div class="bar b-p"></div><div class="bar b-p"></div><div class="bar b-p"></div>
-          <div></div><div class="bar b-p"></div><div class="bar b-d"></div><div></div><div class="bar b-d"></div><div class="bar b-d"></div><div></div><div></div><div></div><div></div><div></div>
-        </div>
-        <div class="gantt-row"><div class="label"><b>Grupo 3</b></div>
-          <div></div><div></div><div class="bar b-o"></div><div></div><div></div><div class="bar b-o"></div><div></div><div></div><div class="bar b-o"></div><div></div>
-          <div class="bar b-r"></div><div></div><div class="bar b-p"></div><div></div><div class="bar b-p"></div><div></div><div class="bar b-p"></div><div></div><div class="bar b-p"></div><div></div>
-          <div class="bar b-d"></div><div></div><div class="bar b-d"></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
-        </div>
-        <div class="gantt-row"><div class="label"><b>Grupo 4</b></div>
-          <div></div><div></div><div class="bar b-o"></div><div class="bar b-o"></div><div></div><div></div><div class="bar b-o"></div><div></div><div></div><div></div>
-          <div></div><div></div><div class="bar b-p"></div><div></div><div></div><div></div><div class="bar b-p"></div><div></div><div></div><div></div>
-          <div></div><div class="bar b-d"></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
-        </div>
-      </div>
-
-      <!-- Heatmap by day x BC -->
-      <h3 class="font-semibold text-sm mt-6">🔥 Heatmap mật độ — Ngày × BC</h3>
-      <div class="text-xs text-slate-500 mb-1">Số campaign / ngày — màu đậm hơn = nhiều campaign hơn</div>
-      <div class="border rounded-lg overflow-hidden">
-        <div class="grid bg-slate-100 text-[10px] text-center text-slate-600 border-b" style="grid-template-columns: 100px repeat(31, minmax(0, 1fr));">
-          <div class="px-2 py-1 text-left font-semibold border-r">BC</div>
-          <div class="py-1">1</div><div class="py-1">2</div><div class="py-1">3</div><div class="py-1">4</div><div class="py-1">5</div>
-          <div class="py-1">6</div><div class="py-1">7</div><div class="py-1">8</div><div class="py-1">9</div><div class="py-1">10</div>
-          <div class="py-1">11</div><div class="py-1">12</div><div class="py-1">13</div><div class="py-1">14</div><div class="py-1">15</div>
-          <div class="py-1">16</div><div class="py-1">17</div><div class="py-1">18</div><div class="py-1">19</div><div class="py-1">20</div>
-          <div class="py-1">21</div><div class="py-1">22</div><div class="py-1">23</div><div class="py-1">24</div><div class="py-1">25</div>
-          <div class="py-1">26</div><div class="py-1">27</div><div class="py-1">28</div><div class="py-1">29</div><div class="py-1">30</div>
-          <div class="py-1">31</div>
-        </div>
-        <style>
-          .heat-row { display:grid; grid-template-columns: 100px repeat(31, minmax(0, 1fr)); border-bottom:1px solid #f1f5f9; }
-          .heat-row > div { border-right:1px solid #fafafa; height:24px; font-size:9px; color:white; display:flex; align-items:center; justify-content:center; }
-          .heat-row > .label { background:#fafafa; color:#475569; font-size:11px; padding:0 8px; justify-content:flex-start; border-right:1px solid #e5e7eb; }
-          .h0 { background: #f3f4f6; color:#d1d5db; }
-          .h1 { background: #dbeafe; color:#1e40af; }
-          .h2 { background: #93c5fd; }
-          .h3 { background: #3b82f6; }
-          .h4 { background: #1d4ed8; }
-        </style>
-        <div class="heat-row"><div class="label">LI3BC03</div>
-          <div class="h1">1</div><div class="h0"></div><div class="h2">2</div><div class="h1">1</div><div class="h1">1</div>
-          <div class="h0"></div><div class="h1">1</div><div class="h2">2</div><div class="h0"></div><div class="h1">1</div>
-          <div class="h1">1</div><div class="h2">2</div><div class="h0"></div><div class="h2">2</div><div class="h0"></div>
-          <div class="h1">1</div><div class="h0"></div><div class="h2">2</div><div class="h1">1</div><div class="h1">1</div>
-          <div class="h0"></div><div class="h1">1</div><div class="h1">1</div><div class="h2">2</div><div class="h0"></div>
-          <div class="h1">1</div><div class="h2">2</div><div class="h1">1</div><div class="h0"></div><div class="h1">1</div>
-          <div class="h0"></div>
-        </div>
-        <div class="heat-row"><div class="label">LI3BC06</div>
-          <div class="h0"></div><div class="h2">2</div><div class="h3">3</div><div class="h2">2</div><div class="h1">1</div>
-          <div class="h2">2</div><div class="h3">3</div><div class="h2">2</div><div class="h2">2</div><div class="h1">1</div>
-          <div class="h3">3</div><div class="h4">4</div><div class="h2">2</div><div class="h3">3</div><div class="h2">2</div>
-          <div class="h3">3</div><div class="h3">3</div><div class="h2">2</div><div class="h3">3</div><div class="h2">2</div>
-          <div class="h2">2</div><div class="h3">3</div><div class="h2">2</div><div class="h3">3</div><div class="h3">3</div>
-          <div class="h2">2</div><div class="h3">3</div><div class="h1">1</div><div class="h2">2</div><div class="h1">1</div>
-          <div class="h0"></div>
-        </div>
-        <div class="heat-row"><div class="label">LI3BC08</div>
-          <div class="h1">1</div><div class="h2">2</div><div class="h2">2</div><div class="h3">3</div><div class="h2">2</div>
-          <div class="h3">3</div><div class="h1">1</div><div class="h2">2</div><div class="h3">3</div><div class="h3">3</div>
-          <div class="h2">2</div><div class="h3">3</div><div class="h3">3</div><div class="h2">2</div><div class="h3">3</div>
-          <div class="h3">3</div><div class="h3">3</div><div class="h2">2</div><div class="h1">1</div><div class="h3">3</div>
-          <div class="h2">2</div><div class="h1">1</div><div class="h3">3</div><div class="h3">3</div><div class="h3">3</div>
-          <div class="h1">1</div><div class="h2">2</div><div class="h3">3</div><div class="h1">1</div><div class="h2">2</div>
-          <div class="h0"></div>
-        </div>
-        <div class="heat-row"><div class="label">LI3BC11</div>
-          <div class="h0"></div><div class="h1">1</div><div class="h0"></div><div class="h0"></div><div class="h1">1</div>
-          <div class="h1">1</div><div class="h2">2</div><div class="h0"></div><div class="h1">1</div><div class="h0"></div>
-          <div class="h2">2</div><div class="h1">1</div><div class="h1">1</div><div class="h0"></div><div class="h2">2</div>
-          <div class="h0"></div><div class="h2">2</div><div class="h0"></div><div class="h1">1</div><div class="h0"></div>
-          <div class="h1">1</div><div class="h1">1</div><div class="h2">2</div><div class="h0"></div><div class="h1">1</div>
-          <div class="h0"></div><div class="h0"></div><div class="h0"></div><div class="h0"></div><div class="h0"></div>
-          <div class="h0"></div>
-        </div>
-        <div class="heat-row"><div class="label">LI3BC12</div>
-          <div class="h0"></div><div class="h0"></div><div class="h0"></div><div class="h1">1</div><div class="h0"></div>
-          <div class="h0"></div><div class="h1">1</div><div class="h0"></div><div class="h0"></div><div class="h0"></div>
-          <div class="h2">2</div><div class="h0"></div><div class="h0"></div><div class="h1">1</div><div class="h0"></div>
-          <div class="h0"></div><div class="h0"></div><div class="h1">1</div><div class="h2">2</div><div class="h0"></div>
-          <div class="h0"></div><div class="h0"></div><div class="h0"></div><div class="h0"></div><div class="h2">2</div>
-          <div class="h0"></div><div class="h0"></div><div class="h0"></div><div class="h1">1</div><div class="h0"></div>
-          <div class="h0"></div>
-        </div>
-        <div class="heat-row"><div class="label">LI2BC13</div>
-          <div class="h0"></div><div class="h0"></div><div class="h0"></div><div class="h0"></div><div class="h0"></div>
-          <div class="h0"></div><div class="h0"></div><div class="h1">1</div><div class="h0"></div><div class="h0"></div>
-          <div class="h0"></div><div class="h2">2</div><div class="h0"></div><div class="h1">1</div><div class="h0"></div>
-          <div class="h0"></div><div class="h1">1</div><div class="h0"></div><div class="h2">2</div><div class="h0"></div>
-          <div class="h1">1</div><div class="h0"></div><div class="h0"></div><div class="h0"></div><div class="h0"></div>
-          <div class="h0"></div><div class="h0"></div><div class="h1">1</div><div class="h0"></div><div class="h0"></div>
-          <div class="h0"></div>
-        </div>
-      </div>
-
-      <p class="text-xs text-slate-500 mt-4">
-        💡 <b>Cách dùng</b>: hover từng thanh để xem PR/grupo/notes. Click vào ngày để mở danh sách campaign ngày đó. Filter theo BC/Status để zoom vào nhóm cụ thể.
+      <h3 class="font-semibold text-sm mt-6">📊 Gantt biểu đồ — task span + tiến độ + hôm nay</h3>
+      <p class="text-xs text-slate-500 mt-1">
+        Thanh nhạt = task span (kế hoạch). Ô vuông = ngày có campaign, màu theo status. Đường đỏ đứt = hôm nay (12/05).
       </p>
+      <div class="flex flex-wrap gap-3 mt-2 text-xs">
+        <span class="inline-flex items-center gap-1"><span class="inline-block w-4 h-3 rounded" style="background:#e0e7ff;border:1px solid #c7d2fe"></span> Task span (kế hoạch)</span>
+        <span class="inline-flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-sm" style="background:#9ca3af"></span> DRAFT</span>
+        <span class="inline-flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-sm" style="background:#3b82f6"></span> PLANNED</span>
+        <span class="inline-flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-sm" style="background:#f59e0b"></span> RUNNING</span>
+        <span class="inline-flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-sm" style="background:#10b981"></span> DONE</span>
+        <span class="inline-flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-sm" style="background:#ef4444"></span> CANCELLED / Chưa PR</span>
+        <span class="inline-flex items-center gap-1"><span class="inline-block w-px h-3 border-l-2 border-red-500 border-dashed"></span> Hôm nay</span>
+      </div>
+
+      <style>
+        .gx-row { display:grid; grid-template-columns: 270px repeat(31, minmax(0, 1fr)); border-bottom:1px solid #f1f5f9; position:relative; }
+        .gx-row > .gx-cell { height:30px; border-right:1px dotted #f1f5f9; }
+        .gx-row > .gx-label { font-size:11px; padding:5px 8px; border-right:1px solid #e5e7eb; background:#fafafa; display:flex; flex-direction:column; justify-content:center; line-height:1.2; }
+        .gx-span { position:absolute; height:8px; top:50%; transform:translateY(-50%); background:#e0e7ff; border-radius:4px; border:1px solid #c7d2fe; pointer-events:none; z-index:1; }
+        .gx-marker { width:14px; height:14px; border-radius:3px; margin:8px auto; box-shadow:0 1px 2px rgba(0,0,0,.15); position:relative; z-index:2; }
+        .gx-today { position:absolute; top:0; bottom:0; width:0; border-left:2px dashed #ef4444; z-index:10; pointer-events:none; }
+        .mk-d { background:#9ca3af; }
+        .mk-p { background:#3b82f6; }
+        .mk-r { background:#f59e0b; }
+        .mk-o { background:#10b981; }
+        .mk-c { background:#ef4444; }
+        .mk-x { background:#ef4444; outline:2px solid #ef4444; outline-offset:1px; }
+      </style>
+
+      <div class="border rounded-lg overflow-hidden mt-3 relative">
+        <div class="grid bg-slate-100 text-[10px] text-center text-slate-600 border-b" style="grid-template-columns: 270px repeat(31, minmax(0, 1fr));">
+          <div class="px-2 py-1 text-left font-semibold border-r">Task (Ubicacion · BC · %)</div>
+          <div class="py-1 border-r">1</div><div class="py-1 border-r">2</div>
+          <div class="py-1 border-r">3</div><div class="py-1 border-r">4</div>
+          <div class="py-1 border-r">5</div><div class="py-1 border-r">6</div>
+          <div class="py-1 border-r">7</div><div class="py-1 border-r">8</div>
+          <div class="py-1 border-r">9</div><div class="py-1 border-r">10</div>
+          <div class="py-1 border-r">11</div><div class="py-1 border-r bg-red-100 font-bold text-red-700">12</div>
+          <div class="py-1 border-r">13</div><div class="py-1 border-r">14</div>
+          <div class="py-1 border-r">15</div><div class="py-1 border-r">16</div>
+          <div class="py-1 border-r">17</div><div class="py-1 border-r">18</div>
+          <div class="py-1 border-r">19</div><div class="py-1 border-r">20</div>
+          <div class="py-1 border-r">21</div><div class="py-1 border-r">22</div>
+          <div class="py-1 border-r">23</div><div class="py-1 border-r">24</div>
+          <div class="py-1 border-r">25</div><div class="py-1 border-r">26</div>
+          <div class="py-1 border-r">27</div><div class="py-1 border-r">28</div>
+          <div class="py-1 border-r">29</div><div class="py-1 border-r">30</div>
+          <div class="py-1">31</div>
+        </div>
+
+        <!-- CP01: span 4..25, markers d4,d11,d19,d25 -->
+        <div class="gx-row">
+          <div class="gx-label"><b>CP01</b> · LI3BC12 · <span class="text-green-600">50%</span><br/><span class="text-[10px] text-slate-500">04→25 · 4 ngày · PR10136</span></div>
+          <div class="gx-span" style="left: calc(270px + (100% - 270px) * 3/31); width: calc((100% - 270px) * 22/31);"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"><div class="gx-marker mk-o"></div></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"><div class="gx-marker mk-o"></div></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"><div class="gx-marker mk-p"></div></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"><div class="gx-marker mk-p"></div></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div>
+        </div>
+
+        <!-- CP02: span 2..23 -->
+        <div class="gx-row">
+          <div class="gx-label"><b>CP02</b> · LI3BC11 · <span class="text-amber-600">20%</span><br/><span class="text-[10px] text-slate-500">02→23 · 5 ngày · PR10202</span></div>
+          <div class="gx-span" style="left: calc(270px + (100% - 270px) * 1/31); width: calc((100% - 270px) * 22/31);"></div>
+          <div class="gx-cell"></div>
+          <div class="gx-cell"><div class="gx-marker mk-o"></div></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"><div class="gx-marker mk-o"></div></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"><div class="gx-marker mk-p"></div></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"><div class="gx-marker mk-p"></div></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+        </div>
+
+        <!-- CP03: span 3..24 -->
+        <div class="gx-row">
+          <div class="gx-label"><b>CP03</b> · LI3BC06 · <span class="text-green-600">75%</span><br/><span class="text-[10px] text-slate-500">03→24 · 4 ngày · PR10139,PR10146</span></div>
+          <div class="gx-span" style="left: calc(270px + (100% - 270px) * 2/31); width: calc((100% - 270px) * 22/31);"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"><div class="gx-marker mk-o"></div></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"><div class="gx-marker mk-o"></div></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"><div class="gx-marker mk-r"></div></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"><div class="gx-marker mk-p"></div></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+        </div>
+
+        <!-- CP07: span 6..26 -->
+        <div class="gx-row">
+          <div class="gx-label"><b>CP07</b> · LI3BC06 · <span class="text-green-600">50%</span><br/><span class="text-[10px] text-slate-500">06→26 · 4 ngày · PR10139</span></div>
+          <div class="gx-span" style="left: calc(270px + (100% - 270px) * 5/31); width: calc((100% - 270px) * 21/31);"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"><div class="gx-marker mk-o"></div></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div>
+          <div class="gx-cell"><div class="gx-marker mk-r"></div></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"><div class="gx-marker mk-p"></div></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"><div class="gx-marker mk-p"></div></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+        </div>
+
+        <!-- CP12: span 12..19 -->
+        <div class="gx-row">
+          <div class="gx-label"><b>CP12</b> · LI2BC13 · <span class="text-red-600">0%</span><br/><span class="text-[10px] text-slate-500">12→19 · 2 ngày · PR10204</span></div>
+          <div class="gx-span" style="left: calc(270px + (100% - 270px) * 11/31); width: calc((100% - 270px) * 8/31);"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"><div class="gx-marker mk-r"></div></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"><div class="gx-marker mk-p"></div></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+        </div>
+
+        <!-- CP17: span 10..24 -->
+        <div class="gx-row">
+          <div class="gx-label"><b>CP17</b> · LI3BC08 · <span class="text-amber-600">67%</span><br/><span class="text-[10px] text-slate-500">10→24 · 3 ngày · PR10081</span></div>
+          <div class="gx-span" style="left: calc(270px + (100% - 270px) * 9/31); width: calc((100% - 270px) * 15/31);"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"><div class="gx-marker mk-c"></div></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"><div class="gx-marker mk-o"></div></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div>
+          <div class="gx-cell"><div class="gx-marker mk-p"></div></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"><div class="gx-marker mk-p"></div></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+        </div>
+
+        <!-- CP41: span 8..18, chưa PR -->
+        <div class="gx-row bg-red-50">
+          <div class="gx-label"><b>CP41</b> · LI3BC06 · <span class="text-red-600">0% ⚠️</span><br/><span class="text-[10px] text-red-600">08→18 · 2 ngày · CHƯA GÁN PR</span></div>
+          <div class="gx-span" style="left: calc(270px + (100% - 270px) * 7/31); width: calc((100% - 270px) * 11/31); background:#fee2e2; border-color:#fca5a5;"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"><div class="gx-marker mk-x"></div></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"><div class="gx-marker mk-x"></div></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div>
+        </div>
+
+        <!-- Today vertical line: between day 11/12 -->
+        <div class="gx-today" style="left: calc(270px + (100% - 270px) * 11.5/31);"></div>
+      </div>
+      <p class="text-xs text-slate-400 italic mt-1 text-center">… 74 task khác</p>
+
+      <h3 class="font-semibold text-sm mt-6">🧑 Tải nguồn lực — utilization từng PR</h3>
+      <p class="text-xs text-slate-500 mt-1">Nếu Util &gt; 100% → PR overload, cần phân lại.</p>
+      <div class="overflow-x-auto mt-2 border rounded">
+        <table class="w-full text-xs">
+          <thead class="bg-slate-100 text-left">
+            <tr><th class="p-2">PR</th><th>BC</th><th>Grupo</th><th>Loại</th>
+                <th>Đã xếp</th><th>Capacity</th><th>Util %</th><th></th></tr>
+          </thead>
+          <tbody>
+            <tr class="border-t"><td class="p-2 font-mono">LI3PR10091</td><td>LI3BC07</td><td>Grupo 1</td><td>Exclusive</td>
+              <td>8</td><td>25</td>
+              <td><div class="bg-slate-200 rounded h-2 w-24"><div class="bg-green-500 h-2 rounded" style="width:32%"></div></div></td>
+              <td class="text-green-600">✓</td></tr>
+            <tr class="border-t"><td class="p-2 font-mono">LI3PR10183</td><td>LI3BC10</td><td>Grupo 2</td><td>Exclusive</td>
+              <td>7</td><td>25</td>
+              <td><div class="bg-slate-200 rounded h-2 w-24"><div class="bg-green-500 h-2 rounded" style="width:28%"></div></div></td>
+              <td class="text-green-600">✓</td></tr>
+            <tr class="border-t"><td class="p-2 font-mono">LI3PR10139</td><td>LI3BC06</td><td>Grupo 4</td><td>Exclusive</td>
+              <td>7</td><td>25</td>
+              <td><div class="bg-slate-200 rounded h-2 w-24"><div class="bg-green-500 h-2 rounded" style="width:28%"></div></div></td>
+              <td class="text-green-600">✓</td></tr>
+            <tr class="border-t bg-amber-50"><td class="p-2 font-mono">LI3PR10175</td><td>LI3BC11</td><td>Grupo 3</td><td>Part-time</td>
+              <td>16</td><td>18</td>
+              <td><div class="bg-slate-200 rounded h-2 w-24"><div class="bg-amber-500 h-2 rounded" style="width:89%"></div></div></td>
+              <td class="text-amber-600">~ gần đầy</td></tr>
+            <tr class="border-t bg-red-50"><td class="p-2 font-mono">LI3PR10202</td><td>LI3BC11</td><td>Grupo 4</td><td>Nuevo</td>
+              <td>22</td><td>18</td>
+              <td><div class="bg-slate-200 rounded h-2 w-24"><div class="bg-red-500 h-2 rounded" style="width:100%"></div></div></td>
+              <td class="text-red-600 font-semibold">⚠️ Vượt 4</td></tr>
+            <tr class="border-t bg-red-50"><td class="p-2 font-mono">LI3PR10081</td><td>LI3BC08</td><td>Grupo 1</td><td>Exclusive</td>
+              <td>27</td><td>25</td>
+              <td><div class="bg-slate-200 rounded h-2 w-24"><div class="bg-red-500 h-2 rounded" style="width:100%"></div></div></td>
+              <td class="text-red-600 font-semibold">⚠️ Vượt 2</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 class="font-semibold text-sm mt-6">⚠️ Bảng xung đột (Conflict Detector)</h3>
+      <div class="grid grid-cols-3 gap-2 mt-2 text-xs">
+        <div class="border rounded p-2 bg-red-50"><div>🔴 HIGH</div><b class="text-lg text-red-600">2</b></div>
+        <div class="border rounded p-2 bg-orange-50"><div>🟠 MED</div><b class="text-lg text-orange-600">2</b></div>
+        <div class="border rounded p-2 bg-yellow-50"><div>🟡 LOW</div><b class="text-lg text-yellow-700">3</b></div>
+      </div>
+      <table class="w-full text-xs mt-2 border">
+        <thead class="bg-slate-100 text-left">
+          <tr><th class="p-2">Severity</th><th>Loại</th><th>Ngày</th><th>Đối tượng</th><th>Chi tiết</th></tr>
+        </thead>
+        <tbody>
+          <tr class="border-t bg-red-50"><td class="p-2">🔴 HIGH</td><td>PR overlap</td><td>2026-05-01</td><td class="font-mono">LI3PR10183</td>
+            <td>LI3PR10183 có <b>2 campaign</b> cùng ngày tại CP25, CP79</td></tr>
+          <tr class="border-t bg-red-50"><td class="p-2">🔴 HIGH</td><td>PR overlap</td><td>2026-05-04</td><td class="font-mono">LI3PR10183</td>
+            <td>LI3PR10183 có <b>2 campaign</b> cùng ngày tại CP27, CP28</td></tr>
+          <tr class="border-t bg-orange-50"><td class="p-2">🟠 MED</td><td>Vượt capacity</td><td>—</td><td class="font-mono">LI3PR10202</td>
+            <td>LI3PR10202: 22 ca &gt; capacity 18 (<b>vượt 4 ngày</b>)</td></tr>
+          <tr class="border-t bg-orange-50"><td class="p-2">🟠 MED</td><td>Vượt capacity</td><td>—</td><td class="font-mono">LI3PR10081</td>
+            <td>LI3PR10081: 27 ca &gt; capacity 25 (<b>vượt 2 ngày</b>)</td></tr>
+          <tr class="border-t bg-yellow-50"><td class="p-2">🟡 LOW</td><td>Chưa phân PR</td><td>2026-05-08</td><td class="font-mono">CP41</td>
+            <td>CMP-202605-CP41-01 chưa có PR</td></tr>
+          <tr class="border-t bg-yellow-50"><td class="p-2">🟡 LOW</td><td>Chưa phân PR</td><td>2026-05-18</td><td class="font-mono">CP41</td>
+            <td>CMP-202605-CP41-02 chưa có PR</td></tr>
+          <tr class="border-t bg-yellow-50"><td class="p-2">🟡 LOW</td><td>Ngoài lịch traffic</td><td>2026-05-04</td><td class="font-mono">CP27</td>
+            <td>CMP-202605-CP27-02: lịch yêu cầu SUNDAY, nhưng xếp ngày 2026-05-04 (Mon)</td></tr>
+        </tbody>
+      </table>
+
+      <div class="mt-4 bg-slate-50 border rounded p-3 text-xs">
+        <b class="text-slate-900">📖 Quy tắc phát hiện xung đột:</b>
+        <ul class="list-disc pl-5 mt-1 space-y-0.5 text-slate-700">
+          <li>🔴 <b>PR overlap</b> — cùng 1 PR bị xếp ≥ 2 campaign trong cùng 1 ngày.</li>
+          <li>🔴 <b>Vị trí trùng</b> — cùng 1 Ubicacion có ≥ 2 campaign cùng ngày (rule cấm).</li>
+          <li>🟠 <b>Vượt capacity</b> — tổng ca xếp cho PR &gt; <span class="kbd">cantidad_dia_trabajo</span>.</li>
+          <li>🟡 <b>Chưa phân PR</b> — campaign DRAFT chưa có ai làm.</li>
+          <li>🟡 <b>Ngoài lịch traffic</b> — ngày không khớp <span class="kbd">Fecha Alta Traffico</span>.</li>
+        </ul>
+      </div>
     </div>
   </div>
 
