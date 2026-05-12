@@ -73,6 +73,7 @@
       <button onclick="showScreen('form')"     class="nav-item w-full text-left px-3 py-2 rounded-md text-sm">📝 Campaign Form</button>
       <button onclick="showScreen('result')"   class="nav-item w-full text-left px-3 py-2 rounded-md text-sm">✅ Resultados</button>
       <button onclick="showScreen('dash')"     class="nav-item w-full text-left px-3 py-2 rounded-md text-sm">📊 Dashboard</button>
+      <button onclick="showScreen('gantt')"    class="nav-item w-full text-left px-3 py-2 rounded-md text-sm">📈 Gantt chart</button>
       <hr class="my-2" />
       <button onclick="showScreen('process')"  class="nav-item w-full text-left px-3 py-2 rounded-md text-sm bg-amber-50 text-amber-900">📖 Giải thích quy trình</button>
     </nav>
@@ -562,6 +563,307 @@
         <div class="absolute" style="left:50%; top:75%">📍</div>
         <div class="absolute bottom-2 right-2 text-xs text-slate-500">Hiển thị 81 điểm có toạ độ</div>
       </div>
+    </div>
+  </div>
+
+  <!-- GANTT -->
+  <div id="screen-gantt" class="screen">
+    <div class="bg-white rounded-xl shadow-sm p-6">
+      <h2 class="text-lg font-bold">📈 Gantt — kế hoạch bán hàng theo thời gian</h2>
+      <p class="text-sm text-slate-500 mt-1">Mỗi ô = 1 campaign trong 1 ngày. Màu theo trạng thái. 3 góc nhìn: theo vị trí, theo đội, theo BC.</p>
+
+      <!-- Filters mockup -->
+      <div class="grid grid-cols-4 gap-3 mt-4 text-sm">
+        <label>Năm<br/><input class="border rounded w-full px-2 py-1" value="2026"/></label>
+        <label>Tháng<br/><input class="border rounded w-full px-2 py-1" value="5"/></label>
+        <label>BC<br/><input class="border rounded w-full px-2 py-1" value="Tất cả"/></label>
+        <label>Status<br/><input class="border rounded w-full px-2 py-1" value="Tất cả"/></label>
+      </div>
+
+      <div class="flex gap-2 mt-4 text-sm border-b">
+        <div class="px-3 py-2 border-b-2 border-blue-600 text-blue-700 font-semibold">📍 Theo vị trí</div>
+        <div class="px-3 py-2 text-slate-500">👥 Theo Grupo</div>
+        <div class="px-3 py-2 text-slate-500">🏢 Theo BC</div>
+        <div class="px-3 py-2 text-slate-500">🧑 Theo Promoter</div>
+      </div>
+
+      <!-- Legend -->
+      <div class="flex flex-wrap gap-3 mt-3 text-xs">
+        <span class="inline-flex items-center gap-1"><span class="inline-block w-4 h-3 rounded" style="background:#9ca3af"></span> DRAFT</span>
+        <span class="inline-flex items-center gap-1"><span class="inline-block w-4 h-3 rounded" style="background:#3b82f6"></span> PLANNED</span>
+        <span class="inline-flex items-center gap-1"><span class="inline-block w-4 h-3 rounded" style="background:#f59e0b"></span> RUNNING</span>
+        <span class="inline-flex items-center gap-1"><span class="inline-block w-4 h-3 rounded" style="background:#10b981"></span> DONE</span>
+        <span class="inline-flex items-center gap-1"><span class="inline-block w-4 h-3 rounded" style="background:#ef4444"></span> CANCELLED</span>
+      </div>
+
+      <!-- Gantt: by location -->
+      <h3 class="font-semibold text-sm mt-5">📍 Gantt theo vị trí (Ubicacion)</h3>
+      <div class="border rounded-lg overflow-hidden mt-2">
+        <!-- Header: 31 days -->
+        <div class="grid bg-slate-100 text-[10px] text-center text-slate-600 border-b" style="grid-template-columns: 120px repeat(31, minmax(0, 1fr));">
+          <div class="px-2 py-1 text-left font-semibold border-r">Ubicacion</div>
+          <!-- days 1..31 -->
+          <div class="py-1 border-r">1</div><div class="py-1 border-r">2</div>
+          <div class="py-1 border-r">3</div><div class="py-1 border-r">4</div>
+          <div class="py-1 border-r">5</div><div class="py-1 border-r">6</div>
+          <div class="py-1 border-r">7</div><div class="py-1 border-r">8</div>
+          <div class="py-1 border-r">9</div><div class="py-1 border-r">10</div>
+          <div class="py-1 border-r">11</div><div class="py-1 border-r">12</div>
+          <div class="py-1 border-r">13</div><div class="py-1 border-r">14</div>
+          <div class="py-1 border-r">15</div><div class="py-1 border-r">16</div>
+          <div class="py-1 border-r">17</div><div class="py-1 border-r">18</div>
+          <div class="py-1 border-r">19</div><div class="py-1 border-r">20</div>
+          <div class="py-1 border-r">21</div><div class="py-1 border-r">22</div>
+          <div class="py-1 border-r">23</div><div class="py-1 border-r">24</div>
+          <div class="py-1 border-r">25</div><div class="py-1 border-r">26</div>
+          <div class="py-1 border-r">27</div><div class="py-1 border-r">28</div>
+          <div class="py-1 border-r">29</div><div class="py-1 border-r">30</div>
+          <div class="py-1">31</div>
+        </div>
+
+        <!-- Rows: each row = 1 Ubicacion -->
+        <!-- Use a script-less approach: each row has empty 31 cells, plus a single bar absolutely positioned by day -->
+        <style>
+          .gantt-row { display:grid; grid-template-columns: 120px repeat(31, minmax(0, 1fr)); border-bottom:1px solid #f1f5f9; }
+          .gantt-row > div { border-right:1px solid #f8fafc; height:22px; }
+          .gantt-row > .label { font-size:11px; padding:3px 8px; border-right:1px solid #e5e7eb; background:#fafafa; }
+          .bar { margin:3px 1px; border-radius:3px; height:16px; }
+          .b-d { background:#9ca3af; }
+          .b-p { background:#3b82f6; }
+          .b-r { background:#f59e0b; }
+          .b-o { background:#10b981; }
+          .b-c { background:#ef4444; }
+        </style>
+
+        <div class="gantt-row"><div class="label"><b>CP01</b> · BC12</div>
+          <div></div><div></div><div></div><div class="bar b-o"></div><div></div><div></div><div></div><div></div><div></div><div></div>
+          <div class="bar b-o"></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div class="bar b-p"></div><div></div>
+          <div></div><div></div><div></div><div></div><div class="bar b-p"></div><div></div><div></div><div></div><div></div><div></div><div></div>
+        </div>
+        <div class="gantt-row"><div class="label"><b>CP02</b> · BC11</div>
+          <div></div><div class="bar b-o"></div><div></div><div></div><div></div><div></div><div></div><div></div><div class="bar b-o"></div><div></div>
+          <div></div><div></div><div></div><div></div><div></div><div class="bar b-p"></div><div></div><div></div><div></div><div></div>
+          <div></div><div></div><div class="bar b-p"></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
+        </div>
+        <div class="gantt-row"><div class="label"><b>CP03</b> · BC06</div>
+          <div></div><div></div><div class="bar b-o"></div><div></div><div></div><div></div><div></div><div></div><div></div><div class="bar b-o"></div>
+          <div></div><div></div><div></div><div></div><div></div><div></div><div class="bar b-r"></div><div></div><div></div><div></div>
+          <div></div><div></div><div></div><div class="bar b-p"></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
+        </div>
+        <div class="gantt-row"><div class="label"><b>CP07</b> · BC06</div>
+          <div></div><div></div><div></div><div></div><div></div><div class="bar b-o"></div><div></div><div></div><div></div><div></div>
+          <div></div><div class="bar b-r"></div><div></div><div></div><div></div><div></div><div></div><div></div><div class="bar b-p"></div><div></div>
+          <div></div><div></div><div></div><div></div><div></div><div class="bar b-p"></div><div></div><div></div><div></div><div></div><div></div>
+        </div>
+        <div class="gantt-row"><div class="label"><b>CP12</b> · BC13</div>
+          <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
+          <div></div><div class="bar b-r"></div><div></div><div></div><div></div><div></div><div></div><div></div><div class="bar b-p"></div><div></div>
+          <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div class="bar b-d"></div><div></div><div></div><div></div>
+        </div>
+        <div class="gantt-row"><div class="label"><b>CP17</b> · BC08</div>
+          <div></div><div></div><div class="bar b-c"></div><div></div><div></div><div></div><div></div><div></div><div></div><div class="bar b-o"></div>
+          <div></div><div></div><div></div><div></div><div></div><div></div><div class="bar b-p"></div><div></div><div></div><div></div>
+          <div></div><div></div><div></div><div class="bar b-p"></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
+        </div>
+        <div class="gantt-row"><div class="label"><b>CP22</b> · BC11x</div>
+          <div></div><div></div><div></div><div></div><div class="bar b-o"></div><div></div><div></div><div></div><div></div><div></div>
+          <div></div><div class="bar b-p"></div><div></div><div></div><div></div><div></div><div></div><div></div><div class="bar b-p"></div><div></div>
+          <div></div><div></div><div></div><div></div><div></div><div></div><div class="bar b-d"></div><div></div><div></div><div></div><div></div>
+        </div>
+        <div class="gantt-row"><div class="label"><b>CP41</b> · BC06</div>
+          <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div class="bar b-d"></div><div></div><div></div>
+          <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div class="bar b-d"></div><div></div><div></div>
+          <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
+        </div>
+        <div class="gantt-row"><div class="label"><b>CP55</b> · BC08</div>
+          <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div class="bar b-d"></div>
+          <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
+          <div></div><div class="bar b-d"></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
+        </div>
+        <div class="px-3 py-2 text-xs text-slate-400 italic">… 72 vị trí khác</div>
+      </div>
+
+      <!-- Gantt: by BC -->
+      <h3 class="font-semibold text-sm mt-6">🏢 Gantt theo BC (rút gọn)</h3>
+      <div class="border rounded-lg overflow-hidden mt-2">
+        <div class="grid bg-slate-100 text-[10px] text-center text-slate-600 border-b" style="grid-template-columns: 120px repeat(31, minmax(0, 1fr));">
+          <div class="px-2 py-1 text-left font-semibold border-r">BC</div>
+          <div class="py-1 border-r">1</div><div class="py-1 border-r">2</div>
+          <div class="py-1 border-r">3</div><div class="py-1 border-r">4</div>
+          <div class="py-1 border-r">5</div><div class="py-1 border-r">6</div>
+          <div class="py-1 border-r">7</div><div class="py-1 border-r">8</div>
+          <div class="py-1 border-r">9</div><div class="py-1 border-r">10</div>
+          <div class="py-1 border-r">11</div><div class="py-1 border-r">12</div>
+          <div class="py-1 border-r">13</div><div class="py-1 border-r">14</div>
+          <div class="py-1 border-r">15</div><div class="py-1 border-r">16</div>
+          <div class="py-1 border-r">17</div><div class="py-1 border-r">18</div>
+          <div class="py-1 border-r">19</div><div class="py-1 border-r">20</div>
+          <div class="py-1 border-r">21</div><div class="py-1 border-r">22</div>
+          <div class="py-1 border-r">23</div><div class="py-1 border-r">24</div>
+          <div class="py-1 border-r">25</div><div class="py-1 border-r">26</div>
+          <div class="py-1 border-r">27</div><div class="py-1 border-r">28</div>
+          <div class="py-1 border-r">29</div><div class="py-1 border-r">30</div>
+          <div class="py-1">31</div>
+        </div>
+        <div class="gantt-row"><div class="label"><b>LI3BC03</b></div>
+          <div class="bar b-o"></div><div></div><div class="bar b-o"></div><div></div><div class="bar b-o"></div><div></div><div></div><div class="bar b-o"></div><div></div><div class="bar b-o"></div>
+          <div></div><div class="bar b-r"></div><div></div><div class="bar b-r"></div><div></div><div class="bar b-p"></div><div></div><div class="bar b-p"></div><div></div><div class="bar b-p"></div>
+          <div></div><div class="bar b-p"></div><div></div><div class="bar b-p"></div><div></div><div class="bar b-d"></div><div></div><div class="bar b-d"></div><div></div><div class="bar b-d"></div><div></div>
+        </div>
+        <div class="gantt-row"><div class="label"><b>LI3BC06</b></div>
+          <div></div><div class="bar b-o"></div><div class="bar b-o"></div><div></div><div></div><div class="bar b-o"></div><div class="bar b-o"></div><div></div><div class="bar b-o"></div><div></div>
+          <div class="bar b-r"></div><div class="bar b-r"></div><div></div><div class="bar b-p"></div><div></div><div class="bar b-p"></div><div class="bar b-p"></div><div></div><div class="bar b-p"></div><div class="bar b-p"></div>
+          <div></div><div class="bar b-p"></div><div></div><div class="bar b-d"></div><div class="bar b-d"></div><div></div><div class="bar b-d"></div><div></div><div class="bar b-d"></div><div></div><div></div>
+        </div>
+        <div class="gantt-row"><div class="label"><b>LI3BC08</b></div>
+          <div></div><div></div><div class="bar b-c"></div><div class="bar b-o"></div><div></div><div class="bar b-o"></div><div></div><div></div><div class="bar b-o"></div><div class="bar b-o"></div>
+          <div></div><div class="bar b-r"></div><div class="bar b-p"></div><div></div><div class="bar b-p"></div><div class="bar b-p"></div><div class="bar b-p"></div><div></div><div></div><div class="bar b-p"></div>
+          <div></div><div></div><div class="bar b-p"></div><div class="bar b-p"></div><div class="bar b-p"></div><div></div><div></div><div class="bar b-d"></div><div></div><div class="bar b-d"></div><div></div>
+        </div>
+        <div class="gantt-row"><div class="label"><b>LI3BC11</b></div>
+          <div></div><div class="bar b-o"></div><div></div><div></div><div class="bar b-o"></div><div></div><div class="bar b-o"></div><div></div><div class="bar b-o"></div><div></div>
+          <div class="bar b-r"></div><div></div><div class="bar b-p"></div><div></div><div class="bar b-p"></div><div></div><div class="bar b-p"></div><div></div><div class="bar b-p"></div><div></div>
+          <div class="bar b-d"></div><div></div><div class="bar b-d"></div><div></div><div class="bar b-d"></div><div></div><div></div><div></div><div></div><div></div><div></div>
+        </div>
+        <div class="gantt-row"><div class="label"><b>LI3BC12</b></div>
+          <div></div><div></div><div></div><div class="bar b-o"></div><div></div><div></div><div></div><div></div><div></div><div></div>
+          <div class="bar b-o"></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div class="bar b-p"></div><div></div>
+          <div></div><div></div><div></div><div></div><div class="bar b-p"></div><div></div><div></div><div></div><div></div><div></div><div></div>
+        </div>
+        <div class="gantt-row"><div class="label"><b>LI2BC13</b></div>
+          <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div class="bar b-o"></div><div></div><div></div>
+          <div></div><div class="bar b-r"></div><div></div><div class="bar b-p"></div><div></div><div></div><div></div><div></div><div class="bar b-p"></div><div></div>
+          <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div class="bar b-d"></div><div></div><div></div><div></div>
+        </div>
+      </div>
+
+      <!-- Gantt: by Grupo -->
+      <h3 class="font-semibold text-sm mt-6">👥 Gantt theo Grupo / đội</h3>
+      <div class="border rounded-lg overflow-hidden mt-2">
+        <div class="grid bg-slate-100 text-[10px] text-center text-slate-600 border-b" style="grid-template-columns: 120px repeat(31, minmax(0, 1fr));">
+          <div class="px-2 py-1 text-left font-semibold border-r">Grupo</div>
+          <div class="py-1 border-r">1</div><div class="py-1 border-r">2</div>
+          <div class="py-1 border-r">3</div><div class="py-1 border-r">4</div>
+          <div class="py-1 border-r">5</div><div class="py-1 border-r">6</div>
+          <div class="py-1 border-r">7</div><div class="py-1 border-r">8</div>
+          <div class="py-1 border-r">9</div><div class="py-1 border-r">10</div>
+          <div class="py-1 border-r">11</div><div class="py-1 border-r">12</div>
+          <div class="py-1 border-r">13</div><div class="py-1 border-r">14</div>
+          <div class="py-1 border-r">15</div><div class="py-1 border-r">16</div>
+          <div class="py-1 border-r">17</div><div class="py-1 border-r">18</div>
+          <div class="py-1 border-r">19</div><div class="py-1 border-r">20</div>
+          <div class="py-1 border-r">21</div><div class="py-1 border-r">22</div>
+          <div class="py-1 border-r">23</div><div class="py-1 border-r">24</div>
+          <div class="py-1 border-r">25</div><div class="py-1 border-r">26</div>
+          <div class="py-1 border-r">27</div><div class="py-1 border-r">28</div>
+          <div class="py-1 border-r">29</div><div class="py-1 border-r">30</div>
+          <div class="py-1">31</div>
+        </div>
+        <div class="gantt-row"><div class="label"><b>Grupo 1</b></div>
+          <div class="bar b-o"></div><div class="bar b-o"></div><div class="bar b-o"></div><div class="bar b-o"></div><div></div><div class="bar b-o"></div><div></div><div class="bar b-o"></div><div class="bar b-o"></div><div class="bar b-o"></div>
+          <div class="bar b-r"></div><div class="bar b-r"></div><div class="bar b-r"></div><div class="bar b-p"></div><div class="bar b-p"></div><div></div><div class="bar b-p"></div><div class="bar b-p"></div><div class="bar b-p"></div><div class="bar b-p"></div>
+          <div class="bar b-p"></div><div class="bar b-p"></div><div class="bar b-d"></div><div class="bar b-d"></div><div class="bar b-d"></div><div class="bar b-d"></div><div class="bar b-d"></div><div class="bar b-d"></div><div></div><div></div><div></div>
+        </div>
+        <div class="gantt-row"><div class="label"><b>Grupo 2</b></div>
+          <div></div><div class="bar b-o"></div><div class="bar b-o"></div><div></div><div class="bar b-o"></div><div class="bar b-o"></div><div></div><div class="bar b-o"></div><div class="bar b-o"></div><div></div>
+          <div class="bar b-r"></div><div class="bar b-r"></div><div></div><div class="bar b-p"></div><div class="bar b-p"></div><div class="bar b-p"></div><div></div><div class="bar b-p"></div><div class="bar b-p"></div><div class="bar b-p"></div>
+          <div></div><div class="bar b-p"></div><div class="bar b-d"></div><div></div><div class="bar b-d"></div><div class="bar b-d"></div><div></div><div></div><div></div><div></div><div></div>
+        </div>
+        <div class="gantt-row"><div class="label"><b>Grupo 3</b></div>
+          <div></div><div></div><div class="bar b-o"></div><div></div><div></div><div class="bar b-o"></div><div></div><div></div><div class="bar b-o"></div><div></div>
+          <div class="bar b-r"></div><div></div><div class="bar b-p"></div><div></div><div class="bar b-p"></div><div></div><div class="bar b-p"></div><div></div><div class="bar b-p"></div><div></div>
+          <div class="bar b-d"></div><div></div><div class="bar b-d"></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
+        </div>
+        <div class="gantt-row"><div class="label"><b>Grupo 4</b></div>
+          <div></div><div></div><div class="bar b-o"></div><div class="bar b-o"></div><div></div><div></div><div class="bar b-o"></div><div></div><div></div><div></div>
+          <div></div><div></div><div class="bar b-p"></div><div></div><div></div><div></div><div class="bar b-p"></div><div></div><div></div><div></div>
+          <div></div><div class="bar b-d"></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
+        </div>
+      </div>
+
+      <!-- Heatmap by day x BC -->
+      <h3 class="font-semibold text-sm mt-6">🔥 Heatmap mật độ — Ngày × BC</h3>
+      <div class="text-xs text-slate-500 mb-1">Số campaign / ngày — màu đậm hơn = nhiều campaign hơn</div>
+      <div class="border rounded-lg overflow-hidden">
+        <div class="grid bg-slate-100 text-[10px] text-center text-slate-600 border-b" style="grid-template-columns: 100px repeat(31, minmax(0, 1fr));">
+          <div class="px-2 py-1 text-left font-semibold border-r">BC</div>
+          <div class="py-1">1</div><div class="py-1">2</div><div class="py-1">3</div><div class="py-1">4</div><div class="py-1">5</div>
+          <div class="py-1">6</div><div class="py-1">7</div><div class="py-1">8</div><div class="py-1">9</div><div class="py-1">10</div>
+          <div class="py-1">11</div><div class="py-1">12</div><div class="py-1">13</div><div class="py-1">14</div><div class="py-1">15</div>
+          <div class="py-1">16</div><div class="py-1">17</div><div class="py-1">18</div><div class="py-1">19</div><div class="py-1">20</div>
+          <div class="py-1">21</div><div class="py-1">22</div><div class="py-1">23</div><div class="py-1">24</div><div class="py-1">25</div>
+          <div class="py-1">26</div><div class="py-1">27</div><div class="py-1">28</div><div class="py-1">29</div><div class="py-1">30</div>
+          <div class="py-1">31</div>
+        </div>
+        <style>
+          .heat-row { display:grid; grid-template-columns: 100px repeat(31, minmax(0, 1fr)); border-bottom:1px solid #f1f5f9; }
+          .heat-row > div { border-right:1px solid #fafafa; height:24px; font-size:9px; color:white; display:flex; align-items:center; justify-content:center; }
+          .heat-row > .label { background:#fafafa; color:#475569; font-size:11px; padding:0 8px; justify-content:flex-start; border-right:1px solid #e5e7eb; }
+          .h0 { background: #f3f4f6; color:#d1d5db; }
+          .h1 { background: #dbeafe; color:#1e40af; }
+          .h2 { background: #93c5fd; }
+          .h3 { background: #3b82f6; }
+          .h4 { background: #1d4ed8; }
+        </style>
+        <div class="heat-row"><div class="label">LI3BC03</div>
+          <div class="h1">1</div><div class="h0"></div><div class="h2">2</div><div class="h1">1</div><div class="h1">1</div>
+          <div class="h0"></div><div class="h1">1</div><div class="h2">2</div><div class="h0"></div><div class="h1">1</div>
+          <div class="h1">1</div><div class="h2">2</div><div class="h0"></div><div class="h2">2</div><div class="h0"></div>
+          <div class="h1">1</div><div class="h0"></div><div class="h2">2</div><div class="h1">1</div><div class="h1">1</div>
+          <div class="h0"></div><div class="h1">1</div><div class="h1">1</div><div class="h2">2</div><div class="h0"></div>
+          <div class="h1">1</div><div class="h2">2</div><div class="h1">1</div><div class="h0"></div><div class="h1">1</div>
+          <div class="h0"></div>
+        </div>
+        <div class="heat-row"><div class="label">LI3BC06</div>
+          <div class="h0"></div><div class="h2">2</div><div class="h3">3</div><div class="h2">2</div><div class="h1">1</div>
+          <div class="h2">2</div><div class="h3">3</div><div class="h2">2</div><div class="h2">2</div><div class="h1">1</div>
+          <div class="h3">3</div><div class="h4">4</div><div class="h2">2</div><div class="h3">3</div><div class="h2">2</div>
+          <div class="h3">3</div><div class="h3">3</div><div class="h2">2</div><div class="h3">3</div><div class="h2">2</div>
+          <div class="h2">2</div><div class="h3">3</div><div class="h2">2</div><div class="h3">3</div><div class="h3">3</div>
+          <div class="h2">2</div><div class="h3">3</div><div class="h1">1</div><div class="h2">2</div><div class="h1">1</div>
+          <div class="h0"></div>
+        </div>
+        <div class="heat-row"><div class="label">LI3BC08</div>
+          <div class="h1">1</div><div class="h2">2</div><div class="h2">2</div><div class="h3">3</div><div class="h2">2</div>
+          <div class="h3">3</div><div class="h1">1</div><div class="h2">2</div><div class="h3">3</div><div class="h3">3</div>
+          <div class="h2">2</div><div class="h3">3</div><div class="h3">3</div><div class="h2">2</div><div class="h3">3</div>
+          <div class="h3">3</div><div class="h3">3</div><div class="h2">2</div><div class="h1">1</div><div class="h3">3</div>
+          <div class="h2">2</div><div class="h1">1</div><div class="h3">3</div><div class="h3">3</div><div class="h3">3</div>
+          <div class="h1">1</div><div class="h2">2</div><div class="h3">3</div><div class="h1">1</div><div class="h2">2</div>
+          <div class="h0"></div>
+        </div>
+        <div class="heat-row"><div class="label">LI3BC11</div>
+          <div class="h0"></div><div class="h1">1</div><div class="h0"></div><div class="h0"></div><div class="h1">1</div>
+          <div class="h1">1</div><div class="h2">2</div><div class="h0"></div><div class="h1">1</div><div class="h0"></div>
+          <div class="h2">2</div><div class="h1">1</div><div class="h1">1</div><div class="h0"></div><div class="h2">2</div>
+          <div class="h0"></div><div class="h2">2</div><div class="h0"></div><div class="h1">1</div><div class="h0"></div>
+          <div class="h1">1</div><div class="h1">1</div><div class="h2">2</div><div class="h0"></div><div class="h1">1</div>
+          <div class="h0"></div><div class="h0"></div><div class="h0"></div><div class="h0"></div><div class="h0"></div>
+          <div class="h0"></div>
+        </div>
+        <div class="heat-row"><div class="label">LI3BC12</div>
+          <div class="h0"></div><div class="h0"></div><div class="h0"></div><div class="h1">1</div><div class="h0"></div>
+          <div class="h0"></div><div class="h1">1</div><div class="h0"></div><div class="h0"></div><div class="h0"></div>
+          <div class="h2">2</div><div class="h0"></div><div class="h0"></div><div class="h1">1</div><div class="h0"></div>
+          <div class="h0"></div><div class="h0"></div><div class="h1">1</div><div class="h2">2</div><div class="h0"></div>
+          <div class="h0"></div><div class="h0"></div><div class="h0"></div><div class="h0"></div><div class="h2">2</div>
+          <div class="h0"></div><div class="h0"></div><div class="h0"></div><div class="h1">1</div><div class="h0"></div>
+          <div class="h0"></div>
+        </div>
+        <div class="heat-row"><div class="label">LI2BC13</div>
+          <div class="h0"></div><div class="h0"></div><div class="h0"></div><div class="h0"></div><div class="h0"></div>
+          <div class="h0"></div><div class="h0"></div><div class="h1">1</div><div class="h0"></div><div class="h0"></div>
+          <div class="h0"></div><div class="h2">2</div><div class="h0"></div><div class="h1">1</div><div class="h0"></div>
+          <div class="h0"></div><div class="h1">1</div><div class="h0"></div><div class="h2">2</div><div class="h0"></div>
+          <div class="h1">1</div><div class="h0"></div><div class="h0"></div><div class="h0"></div><div class="h0"></div>
+          <div class="h0"></div><div class="h0"></div><div class="h1">1</div><div class="h0"></div><div class="h0"></div>
+          <div class="h0"></div>
+        </div>
+      </div>
+
+      <p class="text-xs text-slate-500 mt-4">
+        💡 <b>Cách dùng</b>: hover từng thanh để xem PR/grupo/notes. Click vào ngày để mở danh sách campaign ngày đó. Filter theo BC/Status để zoom vào nhóm cụ thể.
+      </p>
     </div>
   </div>
 
