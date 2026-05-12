@@ -57,14 +57,16 @@ npm run dev
 | Phase | Tính năng | Trạng thái |
 |---|---|---|
 | **0** | Foundation: schema + skeleton FE/BE | ✅ DONE |
-| **1** | MVP Gantt: hierarchy + FS dep + drag/drop + auto reschedule | 🟡 ~70% (chưa hierarchy drag) |
+| **1** | Hierarchy: WBS + indent/outdent + auto rollup | ✅ DONE |
 | **2** | CPM engine: 4 link types + lag + constraints + critical path | ✅ DONE |
-| **3** | Resources: WORK/MATERIAL/COST + assignment + cost calc | 🟡 ~50% (chưa cost rollup) |
-| **4** | Tracking: baseline + % complete + Tracking Gantt + variance | 🟡 ~30% (model có, UI chưa) |
-| **5** | Resource leveling: auto-resolve over-allocation | ❌ chưa |
-| **6** | EVM: BCWS/BCWP/ACWP + CPI/SPI + reports | ❌ chưa |
-| **7** | Import/Export: Project XML | ❌ chưa |
-| **8** | Polish: auth, comments, permissions, multi-project | ❌ chưa |
+| **3** | Resources: WORK/MATERIAL/COST + assignment + cost rollup | ✅ DONE |
+| **4** | Baseline + Variance tracking | ✅ DONE |
+| **5** | Resource leveling: auto-resolve over-allocation | ✅ DONE |
+| **6** | EVM: BCWS/BCWP/ACWP + CV/SV + CPI/SPI + EAC/ETC/VAC/TCPI | ✅ DONE |
+| **7** | Project XML import/export | ✅ DONE |
+| **8** | Auth: JWT (HS256, stdlib) + bcrypt-free pbkdf2 hashing | ✅ DONE |
+
+47 API endpoints. UI cho toàn bộ phases.
 
 ## 🏗️ Kiến trúc
 

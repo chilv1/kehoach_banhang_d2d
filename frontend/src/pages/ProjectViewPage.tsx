@@ -3,8 +3,9 @@ import { useParams, Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Gantt, Task as GanttTask, ViewMode } from "gantt-task-react";
 import {
-  createDependency, createTask, deleteTask, getProject, listDependencies,
-  listTasks, scheduleProject, updateTask,
+  createDependency, createTask, deleteTask, exportXmlUrl, getProject,
+  importXml, indentTask, listDependencies, listTasks, outdentTask,
+  recomputeCosts, scheduleProject, updateTask,
 } from "@/api/client";
 import type { Task as ApiTask } from "@/types";
 import TaskGrid from "@/components/TaskGrid/TaskGrid";
@@ -92,16 +93,32 @@ export default function ProjectViewPage() {
           <span style={{ color: "#6b7280", marginLeft: 8 }}>
             {projQ.data.start_date?.slice(0, 10)} → {projQ.data.finish_date?.slice(0, 10) ?? "—"}
           </span>
-          <span style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
+          <span style={{ marginLeft: "auto", display: "flex", gap: 8, flexWrap: "wrap" }}>
             <button className={tab === "gantt" ? "primary" : ""} onClick={() => setTab("gantt")}>📊 Gantt</button>
             <button className={tab === "grid" ? "primary" : ""} onClick={() => setTab("grid")}>📋 Grid</button>
-            <Link to={`/projects/${projectId}/resources`}>
-              <button>🧑 Resources</button>
-            </Link>
+            <Link to={`/projects/${projectId}/resources`}><button>🧑 Resources</button></Link>
+            <Link to={`/projects/${projectId}/tracking`}><button>📈 Tracking</button></Link>
+            <Link to={`/projects/${projectId}/leveling`}><button>⚖️ Leveling</button></Link>
+            <Link to={`/projects/${projectId}/evm`}><button>💰 EVM</button></Link>
             <button onClick={() => addTaskMut.mutate()}>+ Task</button>
-            <button className="primary" onClick={() => scheduleMut.mutate()}>
-              ⚙️ Schedule (CPM)
-            </button>
+            <button className="primary" onClick={() => scheduleMut.mutate()}>⚙️ Schedule</button>
+            <button onClick={async () => {
+              await recomputeCosts(projectId);
+              qc.invalidateQueries({ queryKey: ["tasks", projectId] });
+            }}>💵 Recompute costs</button>
+            <a href={exportXmlUrl(projectId)} download>
+              <button>⬇ XML</button>
+            </a>
+            <label style={{ display: "inline-block" }}>
+              <input type="file" accept=".xml" style={{ display: "none" }}
+                      onChange={async (e) => {
+                        const f = e.target.files?.[0];
+                        if (!f) return;
+                        const r = await importXml(f);
+                        alert(`Imported as project_id=${r.project_id}`);
+                      }} />
+              <button onClick={(e) => (e.currentTarget.previousSibling as HTMLInputElement).click()}>⬆ XML</button>
+            </label>
           </span>
         </div>
 
@@ -156,10 +173,9 @@ export default function ProjectViewPage() {
             onDelete={(id) => delTaskMut.mutate(id)}
             onAddDep={(pred, succ) =>
               createDependency({ predecessor_id: pred, successor_id: succ, link_type: "FS" })
-                .then(() => {
-                  qc.invalidateQueries({ queryKey: ["deps", projectId] });
-                })
+                .then(() => qc.invalidateQueries({ queryKey: ["deps", projectId] }))
             }
+            onRefresh={() => qc.invalidateQueries({ queryKey: ["tasks", projectId] })}
           />
         )}
       </div>

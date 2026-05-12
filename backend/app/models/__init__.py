@@ -6,3 +6,4 @@ from .dependency import TaskDependency, LinkType  # noqa: F401
 from .resource import Resource, ResourceType  # noqa: F401
 from .assignment import Assignment  # noqa: F401
 from .baseline import Baseline, BaselineTask  # noqa: F401
+from .user import User  # noqa: F401

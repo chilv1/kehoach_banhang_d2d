@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { indentTask, outdentTask } from "@/api/client";
 import type { Dependency, Task } from "@/types";
 
 interface Props {
@@ -7,6 +8,7 @@ interface Props {
   onUpdate: (id: number, data: Partial<Task>) => void;
   onDelete: (id: number) => void;
   onAddDep: (predId: number, succId: number) => Promise<unknown>;
+  onRefresh?: () => void;
 }
 
 const fmt = (s: string | null) =>
@@ -24,10 +26,19 @@ function predecessorsLabel(t: Task, deps: Dependency[], all: Task[]): string {
     .join(", ");
 }
 
-export default function TaskGrid({ tasks, deps, onUpdate, onDelete, onAddDep }: Props) {
+export default function TaskGrid({ tasks, deps, onUpdate, onDelete, onAddDep, onRefresh }: Props) {
   const [editing, setEditing] = useState<{ id: number; field: string } | null>(null);
   const [draft, setDraft] = useState("");
   const [predDialog, setPredDialog] = useState<{ tid: number; value: string } | null>(null);
+
+  const doIndent = async (id: number) => {
+    try { await indentTask(id); onRefresh?.(); }
+    catch (e: any) { alert(e?.response?.data?.detail || e.message); }
+  };
+  const doOutdent = async (id: number) => {
+    try { await outdentTask(id); onRefresh?.(); }
+    catch (e: any) { alert(e?.response?.data?.detail || e.message); }
+  };
 
   const handleStartEdit = (t: Task, field: string, current: string) => {
     setEditing({ id: t.id, field });
@@ -120,7 +131,9 @@ export default function TaskGrid({ tasks, deps, onUpdate, onDelete, onAddDep }: 
                   <span className="badge b-ok">OK</span>
                 )}
               </td>
-              <td>
+              <td style={{ whiteSpace: "nowrap" }}>
+                <button onClick={() => doOutdent(t.id)} title="Outdent">⇦</button>
+                <button onClick={() => doIndent(t.id)} title="Indent">⇨</button>
                 <button className="danger" onClick={() => onDelete(t.id)}>🗑</button>
               </td>
             </tr>

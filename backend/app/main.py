@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.db.session import Base, engine
 from app import models  # noqa: F401  (đăng ký tables)
-from app.routers import projects
+from app.routers import advanced, auth, projects
 
 
 @asynccontextmanager
@@ -31,6 +31,8 @@ app.add_middleware(
 )
 
 app.include_router(projects.router, prefix="/api", tags=["projects"])
+app.include_router(advanced.router, prefix="/api", tags=["advanced"])
+app.include_router(auth.router, prefix="/api", tags=["auth"])
 
 
 @app.get("/")
