@@ -1,74 +1,153 @@
-# Hệ thống quản lý Campaign bán hàng D2D
+# ProjectWeb — MS Project clone (web app)
 
-Ứng dụng Streamlit để **lập, theo dõi và đóng các chương trình bán hàng (campaign)** theo từng vị trí (Ubicacion) và nguồn lực (PR/Grupo) — mô phỏng workflow của file `Campana Plan.xlsx`.
-
-## Mô hình
-
-- **Ubicacion** — danh mục điểm bán (CP01…) với GPS, lịch traffic, Meta/Gasto/Merch mặc định.
-- **PR / Grupo** — danh sách promoter, nhóm làm việc, KPI, capacity ngày/tháng.
-- **Campaign** — 1 chương trình bán hàng tại 1 vị trí vào 1 ngày, có:
-  - mã `CMP-YYYYMM-CPxx-NN`, tên, PR phân công, leader, grupo
-  - Meta (chỉ tiêu), Gasto (chi phí), Merchandising kế hoạch
-  - **Trạng thái** (status): `DRAFT → PLANNED → RUNNING → DONE` (hoặc `CANCELLED`)
-  - Mọi thay đổi trạng thái được ghi log (`campaign_log`)
-- **Campaign Result** — kết quả thực tế + checklist khi đóng campaign.
+Web-based clone của Microsoft Project, mục tiêu **90% parity** với MS Project Desktop.
 
 ```
-DRAFT → PLANNED → RUNNING → DONE
-            ↓        ↓
-        CANCELLED  CANCELLED
+[ React + DHTMLX/gantt-task-react ]  ←→  [ FastAPI + SQLAlchemy + SQLite/Postgres ]
+                                            ↕
+                                       [ CPM Scheduling Engine ]
 ```
 
-## Các trang
+## ✅ Đã làm (v0.1)
 
-| Trang | Mục đích |
-|---|---|
-| 📍 **Ubicacion** | CRUD điểm bán (form + bulk editor) |
-| 👥 **PR / Grupo** | CRUD nhân lực |
-| ⚙️ **Plan Generator** | Sinh hàng loạt campaign DRAFT cho 1 tháng theo prioridad + lịch traffic + ràng buộc nguồn lực |
-| 🎯 **Campaigns** | Danh sách / Kanban / Lịch / chuyển trạng thái / xem log |
-| 📝 **Campaign Form** | Tạo / sửa 1 campaign thủ công (form đầy đủ Meta + Gasto + Merch) |
-| ✅ **Resultados** | Ghi nhận kết quả + checklist, đóng campaign sang DONE |
-| 📊 **Dashboard** | Funnel trạng thái, phân bố ngày/BC, Meta vs Resultado, chi phí, tải PR, map |
-| 📂 **Import/Export** | Import master từ file Excel mẫu, export campaign/result tháng |
+### Backend
+- 7 SQLAlchemy models: `Project`, `Task` (đầy đủ ES/EF/LS/LF/slack/critical/constraint/% complete), `TaskDependency` (4 link type FS/SS/FF/SF + lag/lead), `Resource` (Work/Material/Cost), `Assignment`, `Calendar` + `WorkingTime`, `Baseline` + `BaselineTask`.
+- **CPM Scheduling Engine** (`app/services/scheduler.py`):
+  - Forward pass (Early Start / Early Finish)
+  - Backward pass (Late Start / Late Finish)
+  - Total slack + Free slack
+  - Critical path detection
+  - 4 link types (FS/SS/FF/SF) với lag/lead
+  - 8 constraint types (ASAP, ALAP, MSO, MFO, SNET, SNLT, FNET, FNLT)
+  - Calendar-aware working time (`app/services/working_time.py`)
+  - Cycle detection
+  - Summary task rollup
+- 24 REST API endpoints (FastAPI): CRUD đầy đủ + `/schedule` để chạy CPM.
+- Seed demo "Xây nhà" với 8 task + 9 dep + 4 resource → verified scheduler đúng.
 
-## Thuật toán Plan Generator
+### Frontend
+- Vite + React 18 + TypeScript + React Query + React Router.
+- Trang `ProjectListPage`: tạo / xoá / mở project.
+- Trang `ProjectViewPage`: tab **Gantt** (gantt-task-react với drag/drop ngày + dependency arrows + critical path đỏ) và tab **Grid** (MS Project-style task list với inline edit).
+- Trang `ResourcesPage`: CRUD resource (Work/Material/Cost).
+- API client (`src/api/client.ts`) gọi backend qua axios + Vite proxy.
 
-Sinh DRAFT campaigns cho 1 tháng bằng 4 pass (ưu tiên trước bán trước):
+## 🚀 Setup
 
-1. **Pass 1** — `prioridad` thấp được xếp trước; ngày khớp `Fecha Alta Traffico`; PR cùng BC.
-2. **Pass 2** — nếu thiếu PR cùng BC, cho phép PR khác BC (ghi chú vào campaign).
-3. **Pass 3** — vẫn thiếu? cho phép ngày ngoài lịch traffic, ưu tiên PR cùng BC.
-4. **Pass 4** — không có PR phù hợp → tạo campaign chưa phân công, để team tự gán.
+### Backend
+```bash
+cd backend
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+python3 -m app.seed.demo                  # tạo project demo
+uvicorn app.main:app --reload --port 8500
+```
+→ Swagger: http://127.0.0.1:8500/docs
 
-Mỗi PR không vượt `cantidad_dia_trabajo`; mỗi (PR, ngày) tối đa 1 ca; mỗi (Ubicacion, ngày) tối đa 1 campaign.
+### Frontend
+```bash
+cd frontend
+npm install
+npm run dev
+```
+→ http://localhost:5173
 
-## Cài đặt
+## 🗺️ Roadmap
+
+| Phase | Tính năng | Trạng thái |
+|---|---|---|
+| **0** | Foundation: schema + skeleton FE/BE | ✅ DONE |
+| **1** | MVP Gantt: hierarchy + FS dep + drag/drop + auto reschedule | 🟡 ~70% (chưa hierarchy drag) |
+| **2** | CPM engine: 4 link types + lag + constraints + critical path | ✅ DONE |
+| **3** | Resources: WORK/MATERIAL/COST + assignment + cost calc | 🟡 ~50% (chưa cost rollup) |
+| **4** | Tracking: baseline + % complete + Tracking Gantt + variance | 🟡 ~30% (model có, UI chưa) |
+| **5** | Resource leveling: auto-resolve over-allocation | ❌ chưa |
+| **6** | EVM: BCWS/BCWP/ACWP + CPI/SPI + reports | ❌ chưa |
+| **7** | Import/Export: Project XML | ❌ chưa |
+| **8** | Polish: auth, comments, permissions, multi-project | ❌ chưa |
+
+## 🏗️ Kiến trúc
+
+```
+kehoach_banhang_d2d/
+├── backend/
+│   ├── app/
+│   │   ├── main.py              # FastAPI entry
+│   │   ├── config.py
+│   │   ├── db/session.py        # SQLAlchemy + Base
+│   │   ├── models/              # 7 ORM models
+│   │   │   ├── project.py
+│   │   │   ├── task.py          # ES/EF/LS/LF/slack/critical/8 constraints
+│   │   │   ├── dependency.py    # FS/SS/FF/SF + lag
+│   │   │   ├── resource.py      # WORK/MATERIAL/COST
+│   │   │   ├── assignment.py
+│   │   │   ├── calendar.py
+│   │   │   └── baseline.py
+│   │   ├── schemas/common.py    # Pydantic
+│   │   ├── services/
+│   │   │   ├── working_time.py  # Calendar math
+│   │   │   └── scheduler.py     # CPM engine
+│   │   ├── routers/projects.py  # 24 endpoints
+│   │   └── seed/demo.py
+│   └── requirements.txt
+├── frontend/
+│   ├── src/
+│   │   ├── App.tsx
+│   │   ├── main.tsx
+│   │   ├── api/client.ts        # axios wrapper
+│   │   ├── types/index.ts       # TypeScript types
+│   │   ├── pages/
+│   │   │   ├── ProjectListPage.tsx
+│   │   │   ├── ProjectViewPage.tsx
+│   │   │   └── ResourcesPage.tsx
+│   │   ├── components/
+│   │   │   └── TaskGrid/        # MS Project-style grid
+│   │   └── styles/app.css
+│   ├── package.json
+│   ├── vite.config.ts
+│   ├── tsconfig.json
+│   └── index.html
+├── legacy/streamlit/            # phiên bản cũ (Streamlit campaign mgmt)
+└── mockup/                       # static HTML mockup
+```
+
+## 📐 Quy ước scheduler
+
+- **Duration đơn vị giờ làm việc** (1 ngày = 8h theo Standard Calendar). Lag cũng tính bằng giờ.
+- Lag dương = delay, âm = lead (overlap).
+- Calendar Standard: Mon–Fri, 08:00–12:00 + 13:00–17:00.
+- Summary task có flag `is_summary=true` → loại khỏi CPM, rollup từ children.
+- Milestone (`is_milestone=true`) → duration coerce về 0, start = finish.
+- Critical task ngưỡng slack ≤ 0.5h.
+
+## 🧪 Test
 
 ```bash
+# Backend
+cd backend
+rm -f projectweb.db
+python3 -m app.seed.demo
+python3 -c "
+import sys; sys.path.insert(0,'.')
+from app.db.session import SessionLocal
+from app.models import Project
+from app.services.scheduler import schedule_project
+db = SessionLocal()
+res = schedule_project(db, db.query(Project).first().id)
+print(res)
+"
+```
+
+Expected output:
+```
+{'n_tasks': 8, 'n_critical': 6, 'project_finish': '2026-06-25T08:00:00', ...}
+```
+
+## 📚 Legacy
+
+Phiên bản Streamlit cũ (quản lý campaign D2D) đã chuyển vào `legacy/streamlit/`. Vẫn chạy được:
+```bash
+cd legacy/streamlit
 pip install -r requirements.txt
 streamlit run app.py
-```
-
-DB SQLite tự tạo trong `data/app.db`.
-
-## Cấu trúc code
-
-```
-app.py                       # Home page
-lib/
-  db.py                      # SQLite schema + helpers
-  campaign.py                # CRUD + state machine
-  planner.py                 # Thuật toán sinh DRAFT campaigns
-  excel_io.py                # Import/Export Excel
-pages/
-  1_Ubicacion.py
-  2_PR_Grupo.py
-  3_Campaigns.py             # List / Kanban / Calendar / Status
-  4_Campaign_Form.py         # Form tạo/sửa
-  5_Plan_Generator.py
-  6_Resultados.py
-  7_Dashboard.py
-  8_Import_Export.py
-data/app.db                  # SQLite (auto-gen, gitignored)
 ```

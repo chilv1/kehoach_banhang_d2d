@@ -9,3 +9,18 @@ venv/
 data/app.db
 *.db-journal
 .streamlit/secrets.toml
+
+# Backend
+backend/projectweb.db
+backend/projectweb.db-journal
+backend/.env
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Editor
+.vscode/
+.idea/
+*.swp
