@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<title>ProjectWeb — MS Project clone mockup</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<script src="tailwind.js"></script>
+<style>
+  body { font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+  .screen { display:none; }
+  .screen.active { display:block; }
+  .nav-item.active { background:#1e3a8a; color:white; }
+  .kbd { font-family: ui-monospace,SFMono-Regular,Menlo,monospace; background:#f3f4f6; border:1px solid #e5e7eb; padding:1px 6px; border-radius:4px; font-size:12px; }
+  .badge { padding: 2px 8px; border-radius: 9999px; font-size: 11px; font-weight: 600; }
+  .b-crit { background:#fee2e2; color:#991b1b; }
+  .b-ok { background:#dcfce7; color:#166534; }
+  .b-warn { background:#fef3c7; color:#92400e; }
+
+  /* Gantt grid */
+  .gx-row { display:grid; grid-template-columns: 260px repeat(40, minmax(0, 1fr)); border-bottom:1px solid #f1f5f9; position:relative; min-height:28px; }
+  .gx-row > .gx-cell { border-right:1px dotted #f1f5f9; }
+  .gx-row > .gx-label { font-size:11px; padding:5px 8px; border-right:1px solid #e5e7eb; background:#fafafa; display:flex; flex-direction:column; justify-content:center; line-height:1.2; }
+  .gx-bar { position:absolute; top:7px; height:14px; border-radius:3px; background:#3b82f6; box-shadow:0 1px 2px rgba(0,0,0,.15); z-index:2; }
+  .gx-bar.crit { background:#ef4444; }
+  .gx-bar.summary { background:#1e293b; height:8px; top:10px; border-radius:0; }
+  .gx-bar.summary::before, .gx-bar.summary::after {
+    content:''; position:absolute; top:0; width:0; height:0;
+    border-style:solid; border-color:#1e293b transparent transparent transparent;
+  }
+  .gx-bar.summary::before { left:-4px; border-width:8px 8px 0 0; }
+  .gx-bar.summary::after { right:-4px; border-width:8px 0 0 8px; }
+  .gx-bar.milestone { background:transparent; transform:rotate(45deg); width:14px; height:14px; background:#7c3aed; top:8px; }
+  .gx-bar .prog { background:#1d4ed8; height:100%; border-radius:3px 0 0 3px; }
+  .gx-bar.crit .prog { background:#7f1d1d; }
+  .gx-arrow { position:absolute; height:0; border-top:1px solid #64748b; z-index:1; }
+  .gx-today { position:absolute; top:0; bottom:0; width:0; border-left:2px dashed #ef4444; z-index:10; pointer-events:none; }
+  .gx-header { display:grid; grid-template-columns: 260px repeat(40, minmax(0, 1fr)); background:#f1f5f9; font-size:9px; text-align:center; color:#475569; border-bottom:1px solid #cbd5e1; position:sticky; top:0; z-index:5; }
+  .gx-header > div { border-right:1px solid #e2e8f0; padding:3px 0; }
+
+  /* MS Project menu */
+  .ribbon { background:#1f3864; color:white; }
+  .ribbon-tab { padding:6px 16px; cursor:pointer; font-size:13px; border-right:1px solid rgba(255,255,255,.15); }
+  .ribbon-tab.active { background:#0e2a52; }
+</style>
+</head>
+<body class="bg-slate-100 text-slate-800">
+
+<!-- HEADER -->
+<header class="bg-white border-b shadow-sm">
+  <div class="max-w-screen-2xl mx-auto px-6 py-3 flex items-center justify-between">
+    <div>
+      <h1 class="text-xl font-bold text-slate-900">📊 ProjectWeb — Microsoft Project clone (web)</h1>
+      <p class="text-xs text-slate-500">Full SPA mockup • 8 phases • CPM engine • Resource leveling • EVM • XML I/O • Auth</p>
+    </div>
+    <div class="text-xs text-slate-400">v1.0 • mockup/projectweb/</div>
+  </div>
+</header>
+
+<!-- WORKFLOW DIAGRAM -->
+<section class="max-w-screen-2xl mx-auto px-6 mt-4">
+  <div class="bg-white rounded-lg shadow-sm p-4">
+    <div class="font-semibold text-slate-700 text-sm mb-2">🔄 Quy trình quản lý dự án (8 phases)</div>
+    <div class="flex flex-wrap items-center gap-2 text-xs">
+      <span class="px-2 py-1 rounded bg-blue-100 text-blue-800">1. Đăng nhập</span>
+      <span class="text-slate-400">→</span>
+      <span class="px-2 py-1 rounded bg-blue-100 text-blue-800">2. Tạo Project</span>
+      <span class="text-slate-400">→</span>
+      <span class="px-2 py-1 rounded bg-blue-100 text-blue-800">3. Nhập Task + WBS</span>
+      <span class="text-slate-400">→</span>
+      <span class="px-2 py-1 rounded bg-blue-100 text-blue-800">4. Tạo Dependencies</span>
+      <span class="text-slate-400">→</span>
+      <span class="px-2 py-1 rounded bg-blue-100 text-blue-800">5. Phân Resources</span>
+      <span class="text-slate-400">→</span>
+      <span class="px-2 py-1 rounded bg-amber-100 text-amber-800">6. Schedule (CPM)</span>
+      <span class="text-slate-400">→</span>
+      <span class="px-2 py-1 rounded bg-amber-100 text-amber-800">7. Level resources</span>
+      <span class="text-slate-400">→</span>
+      <span class="px-2 py-1 rounded bg-amber-100 text-amber-800">8. Save Baseline</span>
+      <span class="text-slate-400">→</span>
+      <span class="px-2 py-1 rounded bg-green-100 text-green-800">9. Track %</span>
+      <span class="text-slate-400">→</span>
+      <span class="px-2 py-1 rounded bg-green-100 text-green-800">10. EVM Report</span>
+    </div>
+  </div>
+</section>
+
+<!-- MAIN -->
+<main class="max-w-screen-2xl mx-auto px-6 my-4 grid grid-cols-12 gap-4">
+
+  <!-- SIDEBAR -->
+  <aside class="col-span-12 md:col-span-2">
+    <nav class="bg-white rounded-lg shadow-sm p-2 space-y-1 sticky top-2">
+      <div class="text-[10px] uppercase font-semibold text-slate-400 px-2 pt-2">Phase 8 — Auth</div>
+      <button onclick="showScreen('login')" class="nav-item w-full text-left px-3 py-1.5 rounded text-xs">🔐 Login</button>
+      <div class="text-[10px] uppercase font-semibold text-slate-400 px-2 pt-2">Phase 0 — Core</div>
+      <button onclick="showScreen('projects')" class="nav-item active w-full text-left px-3 py-1.5 rounded text-xs">📁 Projects list</button>
+      <button onclick="showScreen('gantt')"    class="nav-item w-full text-left px-3 py-1.5 rounded text-xs">📊 Gantt view</button>
+      <button onclick="showScreen('grid')"     class="nav-item w-full text-left px-3 py-1.5 rounded text-xs">📋 Task grid</button>
+      <div class="text-[10px] uppercase font-semibold text-slate-400 px-2 pt-2">Phase 3 — Resources</div>
+      <button onclick="showScreen('resources')" class="nav-item w-full text-left px-3 py-1.5 rounded text-xs">🧑 Resources</button>
+      <div class="text-[10px] uppercase font-semibold text-slate-400 px-2 pt-2">Phase 4 — Tracking</div>
+      <button onclick="showScreen('tracking')" class="nav-item w-full text-left px-3 py-1.5 rounded text-xs">📈 Baseline + Variance</button>
+      <div class="text-[10px] uppercase font-semibold text-slate-400 px-2 pt-2">Phase 5 — Leveling</div>
+      <button onclick="showScreen('leveling')" class="nav-item w-full text-left px-3 py-1.5 rounded text-xs">⚖️ Resource leveling</button>
+      <div class="text-[10px] uppercase font-semibold text-slate-400 px-2 pt-2">Phase 6 — EVM</div>
+      <button onclick="showScreen('evm')"      class="nav-item w-full text-left px-3 py-1.5 rounded text-xs">💰 Earned Value</button>
+      <div class="text-[10px] uppercase font-semibold text-slate-400 px-2 pt-2">Phase 7 — I/O</div>
+      <button onclick="showScreen('xml')"      class="nav-item w-full text-left px-3 py-1.5 rounded text-xs">📂 XML Import/Export</button>
+    </nav>
+  </aside>
+
+  <section class="col-span-12 md:col-span-10 space-y-4">
+
+  <!-- LOGIN -->
+  <div id="screen-login" class="screen">
+    <div class="bg-white rounded-lg shadow-sm" style="min-height:560px">
+      <div class="p-3 bg-slate-50 border-b font-semibold text-sm">🔐 Phase 8 — Đăng nhập / Đăng ký</div>
+      <div class="p-6 flex items-center justify-center" style="min-height:480px">
+        <div class="border rounded-lg p-6 w-96 bg-slate-50">
+          <h2 class="text-lg font-bold mb-3 text-slate-800">🔐 Đăng nhập</h2>
+          <div class="flex gap-2 mb-3">
+            <button class="px-3 py-1 rounded bg-blue-600 text-white text-sm">Login</button>
+            <button class="px-3 py-1 rounded border text-sm">Register</button>
+          </div>
+          <div class="space-y-2">
+            <input class="w-full border rounded px-2 py-1.5 text-sm" placeholder="Username" value="admin"/>
+            <input class="w-full border rounded px-2 py-1.5 text-sm" type="password" value="••••••••"/>
+          </div>
+          <button class="mt-3 w-full bg-blue-600 text-white py-2 rounded text-sm font-semibold">🔐 Đăng nhập</button>
+          <p class="text-[11px] text-slate-500 mt-3">
+            Authentication dùng JWT HS256 + pbkdf2 password hash (200k iterations) — hoàn toàn stdlib, không phụ thuộc `cryptography`. User đầu tiên đăng ký tự động thành admin.
+          </p>
+          <div class="mt-3 text-[10px] text-slate-500">
+            <b>Endpoints</b>: <span class="kbd">POST /api/auth/register</span>, <span class="kbd">POST /api/auth/login</span>, <span class="kbd">GET /api/auth/me</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROJECTS LIST -->
+  <div id="screen-projects" class="screen active">
+    <div class="bg-white rounded-lg shadow-sm">
+      <div class="p-3 bg-slate-50 border-b font-semibold text-sm flex items-center">
+        📁 Projects list
+        <span class="ml-auto text-xs text-slate-500">👤 admin · <a href="#" class="text-blue-600">Logout</a></span>
+      </div>
+      <div class="p-4">
+        <div class="flex gap-2 mb-3">
+          <input class="border rounded px-2 py-1 text-sm" value="New project"/>
+          <input class="border rounded px-2 py-1 text-sm" type="date" value="2026-05-04"/>
+          <button class="bg-blue-600 text-white rounded px-3 py-1 text-sm">+ New project</button>
+        </div>
+        <table class="w-full text-sm">
+          <thead class="bg-slate-50 text-left text-xs">
+            <tr><th class="p-2">ID</th><th>Name</th><th>Start</th><th>Finish</th><th>Updated</th><th></th></tr>
+          </thead>
+          <tbody>
+            <tr class="border-t">
+              <td class="p-2">1</td>
+              <td><a href="#" class="text-blue-600 font-medium">Demo — Xây nhà</a></td>
+              <td>2026-05-04</td><td>2026-06-25</td><td>2026-05-12 14:30</td>
+              <td><button class="text-red-600 text-xs">Delete</button></td>
+            </tr>
+            <tr class="border-t">
+              <td class="p-2">2</td>
+              <td><a href="#" class="text-blue-600 font-medium">Triển khai phần mềm CRM</a></td>
+              <td>2026-04-01</td><td>2026-08-15</td><td>2026-05-10 09:12</td>
+              <td><button class="text-red-600 text-xs">Delete</button></td>
+            </tr>
+            <tr class="border-t">
+              <td class="p-2">3</td>
+              <td><a href="#" class="text-blue-600 font-medium">Chiến dịch marketing Q3</a></td>
+              <td>2026-07-01</td><td>—</td><td>2026-05-08 16:45</td>
+              <td><button class="text-red-600 text-xs">Delete</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- GANTT VIEW -->
+  <div id="screen-gantt" class="screen">
+    <div class="bg-white rounded-lg shadow-sm">
+      <!-- Ribbon (giả MS Project) -->
+      <div class="ribbon flex">
+        <div class="ribbon-tab active">File</div>
+        <div class="ribbon-tab">Task</div>
+        <div class="ribbon-tab">Resource</div>
+        <div class="ribbon-tab">Report</div>
+        <div class="ribbon-tab">View</div>
+      </div>
+      <div class="p-2 bg-slate-50 border-b flex items-center gap-2 text-xs flex-wrap">
+        <b>Demo — Xây nhà</b>
+        <span class="text-slate-500">2026-05-04 → 2026-06-25</span>
+        <span class="ml-auto flex gap-1 flex-wrap">
+          <button class="bg-blue-600 text-white rounded px-2 py-1">📊 Gantt</button>
+          <button class="border rounded px-2 py-1">📋 Grid</button>
+          <button class="border rounded px-2 py-1">🧑 Resources</button>
+          <button class="border rounded px-2 py-1">📈 Tracking</button>
+          <button class="border rounded px-2 py-1">⚖️ Leveling</button>
+          <button class="border rounded px-2 py-1">💰 EVM</button>
+          <button class="border rounded px-2 py-1">+ Task</button>
+          <button class="bg-amber-500 text-white rounded px-2 py-1">⚙️ Schedule (CPM)</button>
+        </span>
+      </div>
+      <div class="p-2 border-b flex gap-1 text-xs">
+        <button class="border rounded px-2 py-0.5">Hour</button>
+        <button class="bg-slate-700 text-white rounded px-2 py-0.5">Day</button>
+        <button class="border rounded px-2 py-0.5">Week</button>
+        <button class="border rounded px-2 py-0.5">Month</button>
+        <div class="ml-auto flex gap-3 items-center">
+          <span class="inline-flex items-center gap-1"><span class="w-3 h-3 rounded-sm bg-red-500"></span>Critical</span>
+          <span class="inline-flex items-center gap-1"><span class="w-3 h-3 rounded-sm bg-blue-500"></span>Normal</span>
+          <span class="inline-flex items-center gap-1"><span class="w-3 h-3 rounded-sm bg-purple-600 transform rotate-45"></span>Milestone</span>
+          <span class="inline-flex items-center gap-1"><span class="w-px h-3 border-l-2 border-red-500 border-dashed"></span>Hôm nay</span>
+        </div>
+      </div>
+
+      <!-- Gantt grid: 40 days from May 4 to Jun 12-->
+      <div class="overflow-x-auto">
+        <div class="relative">
+          <!-- Header with dates -->
+          <div class="gx-header">
+            <div class="text-left pl-2 text-xs font-semibold border-r">Task name / start / finish / dur</div>
+            <div>04</div><div>05</div><div>06</div><div>07</div><div>08</div>
+            <div class="bg-slate-200">09</div><div class="bg-slate-200">10</div>
+            <div>11</div><div>12</div><div>13</div><div>14</div><div>15</div>
+            <div class="bg-slate-200">16</div><div class="bg-slate-200">17</div>
+            <div>18</div><div>19</div><div>20</div><div>21</div><div>22</div>
+            <div class="bg-slate-200">23</div><div class="bg-slate-200">24</div>
+            <div>25</div><div>26</div><div>27</div><div>28</div><div>29</div>
+            <div class="bg-slate-200">30</div><div class="bg-slate-200">31</div>
+            <div>01</div><div>02</div><div>03</div><div>04</div><div>05</div>
+            <div class="bg-slate-200">06</div><div class="bg-slate-200">07</div>
+            <div>08</div><div>09</div><div>10</div><div>11</div><div>12</div>
+          </div>
+
+          <!-- Task 1: Thiết kế (id=1) May 4-8 = day 1..5 → critical -->
+          <div class="gx-row">
+            <div class="gx-label">
+              <b>1 · Thiết kế</b>
+              <span class="text-[10px] text-slate-500">04/05 → 08/05 · 40h · KTS · 🔴</span>
+            </div>
+            <div class="gx-bar crit" style="left: calc(260px + (100% - 260px) * 0/40); width: calc((100% - 260px) * 5/40);">
+              <div class="prog" style="width:100%"></div>
+            </div>
+            <!-- 40 empty cells -->
+            <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+            <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+            <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+            <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+            <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+            <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+            <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+            <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          </div>
+
+          <!-- Task 2: Xin phép xây dựng (id=2) May 11-22 = day 8..19, critical -->
+          <div class="gx-row">
+            <div class="gx-label">
+              <b>2 · Xin phép xây dựng</b>
+              <span class="text-[10px] text-slate-500">11/05 → 22/05 · 80h · KTS · 🔴</span>
+            </div>
+            <div class="gx-bar crit" style="left: calc(260px + (100% - 260px) * 7/40); width: calc((100% - 260px) * 12/40);">
+              <div class="prog" style="width:60%"></div>
+            </div>
+            <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+            <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+            <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+            <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+            <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+            <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+            <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+            <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          </div>
+
+          <!-- Task 3: Đào móng (id=3) May 11-13 = day 8..10, not critical (slack 56h) -->
+          <div class="gx-row">
+            <div class="gx-label">
+              <b>3 · Đào móng</b>
+              <span class="text-[10px] text-slate-500">11/05 → 13/05 · 24h · XD · slack 56h</span>
+            </div>
+            <div class="gx-bar" style="left: calc(260px + (100% - 260px) * 7/40); width: calc((100% - 260px) * 3/40);">
+              <div class="prog" style="width:100%"></div>
+            </div>
+            <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+            <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+            <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+            <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+            <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+            <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+            <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+            <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          </div>
+
+          <!-- Task 4: Đổ bê tông (id=4) May 25-26 = day 22..23, critical -->
+          <div class="gx-row">
+            <div class="gx-label">
+              <b>4 · Đổ bê tông móng</b>
+              <span class="text-[10px] text-slate-500">25/05 → 26/05 · 16h · XD · 🔴</span>
+            </div>
+            <div class="gx-bar crit" style="left: calc(260px + (100% - 260px) * 21/40); width: calc((100% - 260px) * 2/40);">
+              <div class="prog" style="width:0%"></div>
+            </div>
+            <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+            <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+            <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+            <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+            <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+            <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+            <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+            <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          </div>
+
+          <!-- Task 5: Xây tường (id=5) May 28 - Jun 17, FS+lag 8h, critical -->
+          <div class="gx-row">
+            <div class="gx-label">
+              <b>5 · Xây tường</b>
+              <span class="text-[10px] text-slate-500">28/05 → 17/06 · 120h · XD · 🔴</span>
+            </div>
+            <div class="gx-bar crit" style="left: calc(260px + (100% - 260px) * 24/40); width: calc((100% - 260px) * 15/40);">
+              <div class="prog" style="width:0%"></div>
+            </div>
+            <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+            <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+            <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+            <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+            <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+            <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+            <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+            <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          </div>
+
+          <!-- Task 6: Lắp điện nước (id=6) Jun 4 - Jun 12, SS+40h, slack 64h -->
+          <div class="gx-row">
+            <div class="gx-label">
+              <b>6 · Lắp điện nước</b>
+              <span class="text-[10px] text-slate-500">04/06 → 12/06 · 56h · DN · slack 64h</span>
+            </div>
+            <div class="gx-bar" style="left: calc(260px + (100% - 260px) * 31/40); width: calc((100% - 260px) * 7/40);">
+              <div class="prog" style="width:0%"></div>
+            </div>
+            <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+            <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+            <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+            <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+            <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+            <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+            <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+            <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          </div>
+
+          <!-- Vertical "today" line at May 12 = day 9 -->
+          <div class="gx-today" style="left: calc(260px + (100% - 260px) * 8.5/40);"></div>
+
+          <!-- Footer note about more rows -->
+          <div class="text-xs text-slate-400 italic p-2 text-center border-t">+ 2 task khác (Sơn nội thất, Bàn giao ◆) — cuộn xuống</div>
+        </div>
+      </div>
+
+      <div class="p-3 text-xs text-slate-600 bg-slate-50 border-t">
+        <b>💡 Cách dùng</b>: <b>Drag thanh</b> để đổi ngày (constraint SNET tự được set), <b>double-click</b> để xoá task, <b>kéo thả % progress</b> trực tiếp trên bar. Schedule (CPM) chạy lại auto khi đổi.
+      </div>
+    </div>
+  </div>
+
+  <!-- TASK GRID -->
+  <div id="screen-grid" class="screen">
+    <div class="bg-white rounded-lg shadow-sm">
+      <div class="p-3 bg-slate-50 border-b font-semibold text-sm flex items-center">
+        📋 Task grid — MS Project style
+        <span class="ml-auto text-xs flex gap-1">
+          <button class="border rounded px-2 py-0.5">⇨ Indent</button>
+          <button class="border rounded px-2 py-0.5">⇦ Outdent</button>
+          <button class="border rounded px-2 py-0.5">+ Task</button>
+        </span>
+      </div>
+      <table class="w-full text-xs">
+        <thead class="bg-slate-100 text-left">
+          <tr>
+            <th class="p-2">ID</th><th>WBS</th><th>Name</th><th>Dur (h)</th>
+            <th>Start</th><th>Finish</th><th>Slack</th><th>%</th>
+            <th>Predecessors</th><th>Status</th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="border-t bg-red-50">
+            <td class="p-2">1</td><td>1</td>
+            <td><b>Thiết kế</b></td><td>40</td>
+            <td>04/05 08:00</td><td>08/05 17:00</td>
+            <td class="text-red-600">0h</td><td>100%</td>
+            <td>—</td>
+            <td><span class="badge b-crit">CRITICAL</span></td>
+            <td><button>⇦</button><button>⇨</button><button class="text-red-600">🗑</button></td>
+          </tr>
+          <tr class="border-t bg-red-50">
+            <td class="p-2">2</td><td>2</td>
+            <td><b>Xin phép xây dựng</b></td><td>80</td>
+            <td>11/05 08:00</td><td>22/05 17:00</td>
+            <td class="text-red-600">0h</td><td>60%</td>
+            <td>1 (Thiết kế) FS</td>
+            <td><span class="badge b-crit">CRITICAL</span></td>
+            <td><button>⇦</button><button>⇨</button><button class="text-red-600">🗑</button></td>
+          </tr>
+          <tr class="border-t">
+            <td class="p-2">3</td><td>3</td>
+            <td><span style="padding-left:0">Đào móng</span></td><td>24</td>
+            <td>11/05 08:00</td><td>13/05 17:00</td>
+            <td class="text-slate-500">56h</td><td>0%</td>
+            <td>1 (Thiết kế) FS</td>
+            <td><span class="badge b-ok">OK</span></td>
+            <td><button>⇦</button><button>⇨</button><button class="text-red-600">🗑</button></td>
+          </tr>
+          <tr class="border-t bg-red-50">
+            <td class="p-2">4</td><td>4</td>
+            <td><b>Đổ bê tông móng</b></td><td>16</td>
+            <td>25/05 08:00</td><td>26/05 17:00</td>
+            <td class="text-red-600">0h</td><td>0%</td>
+            <td>2 FS, 3 FS</td>
+            <td><span class="badge b-crit">CRITICAL</span></td>
+            <td><button>⇦</button><button>⇨</button><button class="text-red-600">🗑</button></td>
+          </tr>
+          <tr class="border-t bg-red-50">
+            <td class="p-2">5</td><td>5</td>
+            <td><b>Xây tường</b></td><td>120</td>
+            <td>28/05 08:00</td><td>17/06 17:00</td>
+            <td class="text-red-600">0h</td><td>0%</td>
+            <td>4 FS +8h lag</td>
+            <td><span class="badge b-crit">CRITICAL</span></td>
+            <td><button>⇦</button><button>⇨</button><button class="text-red-600">🗑</button></td>
+          </tr>
+          <tr class="border-t">
+            <td class="p-2">6</td><td>6</td>
+            <td>Lắp điện nước</td><td>56</td>
+            <td>04/06 08:00</td><td>12/06 17:00</td>
+            <td class="text-slate-500">64h</td><td>0%</td>
+            <td>5 SS +40h</td>
+            <td><span class="badge b-ok">OK</span></td>
+            <td><button>⇦</button><button>⇨</button><button class="text-red-600">🗑</button></td>
+          </tr>
+          <tr class="border-t bg-red-50">
+            <td class="p-2">7</td><td>7</td>
+            <td><b>Sơn nội thất</b></td><td>40</td>
+            <td>18/06 08:00</td><td>24/06 17:00</td>
+            <td class="text-red-600">0h</td><td>0%</td>
+            <td>5 FS</td>
+            <td><span class="badge b-crit">CRITICAL</span></td>
+            <td><button>⇦</button><button>⇨</button><button class="text-red-600">🗑</button></td>
+          </tr>
+          <tr class="border-t bg-red-50" style="font-style:italic; color:#7c3aed">
+            <td class="p-2">8</td><td>8</td>
+            <td>◆ <b>Bàn giao</b> (milestone)</td><td>0</td>
+            <td>25/06 08:00</td><td>25/06 08:00</td>
+            <td class="text-red-600">0h</td><td>0%</td>
+            <td>6 FS, 7 FS</td>
+            <td><span class="badge b-crit">CRITICAL</span></td>
+            <td><button>⇦</button><button>⇨</button><button class="text-red-600">🗑</button></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="p-3 text-xs text-slate-600 bg-slate-50 border-t">
+        <b>💡 Tips</b>: Double-click cell để edit inline. Bấm <span class="kbd">⇨</span> để indent (thành child); <span class="kbd">⇦</span> để outdent. WBS code tự sinh theo cấu trúc (1, 1.1, 1.1.1...).
+      </div>
+    </div>
+  </div>
+
+  <!-- RESOURCES -->
+  <div id="screen-resources" class="screen">
+    <div class="bg-white rounded-lg shadow-sm">
+      <div class="p-3 bg-slate-50 border-b font-semibold text-sm">🧑 Resources — WORK / MATERIAL / COST</div>
+      <div class="p-3 flex gap-2 text-sm border-b">
+        <input class="border rounded px-2 py-1 text-xs flex-1" placeholder="Tên" value="Kiến trúc sư"/>
+        <select class="border rounded px-2 py-1 text-xs"><option>Work</option><option>Material</option><option>Cost</option></select>
+        <input class="border rounded px-2 py-1 text-xs w-24" type="number" value="1" placeholder="Max units"/>
+        <input class="border rounded px-2 py-1 text-xs w-28" type="number" value="50" placeholder="Std rate /h"/>
+        <button class="bg-blue-600 text-white rounded px-3 py-1 text-xs">+ Add resource</button>
+      </div>
+      <table class="w-full text-sm">
+        <thead class="bg-slate-50 text-left text-xs">
+          <tr><th class="p-2">ID</th><th>Name</th><th>Initials</th><th>Type</th><th>Max Units</th><th>Std Rate</th><th>OT Rate</th><th>Cost/Use</th><th></th></tr>
+        </thead>
+        <tbody>
+          <tr class="border-t"><td class="p-2">1</td><td><b>Kiến trúc sư</b></td><td>KTS</td><td><span class="badge bg-blue-100 text-blue-800">WORK</span></td><td>100%</td><td>$50/h</td><td>$75/h</td><td>$0</td><td><button class="text-red-600">🗑</button></td></tr>
+          <tr class="border-t"><td class="p-2">2</td><td><b>Đội xây dựng</b></td><td>XD</td><td><span class="badge bg-blue-100 text-blue-800">WORK</span></td><td>300%</td><td>$20/h</td><td>$30/h</td><td>$0</td><td><button class="text-red-600">🗑</button></td></tr>
+          <tr class="border-t"><td class="p-2">3</td><td><b>Đội điện nước</b></td><td>DN</td><td><span class="badge bg-blue-100 text-blue-800">WORK</span></td><td>200%</td><td>$25/h</td><td>$37/h</td><td>$0</td><td><button class="text-red-600">🗑</button></td></tr>
+          <tr class="border-t"><td class="p-2">4</td><td><b>Thợ sơn</b></td><td>ST</td><td><span class="badge bg-blue-100 text-blue-800">WORK</span></td><td>200%</td><td>$18/h</td><td>$27/h</td><td>$0</td><td><button class="text-red-600">🗑</button></td></tr>
+          <tr class="border-t"><td class="p-2">5</td><td>Xi măng</td><td>XM</td><td><span class="badge bg-amber-100 text-amber-800">MATERIAL</span></td><td>—</td><td>$5/bao</td><td>—</td><td>$0</td><td><button class="text-red-600">🗑</button></td></tr>
+          <tr class="border-t"><td class="p-2">6</td><td>Phí giấy phép</td><td>GP</td><td><span class="badge bg-purple-100 text-purple-800">COST</span></td><td>—</td><td>—</td><td>—</td><td>$500</td><td><button class="text-red-600">🗑</button></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TRACKING -->
+  <div id="screen-tracking" class="screen">
+    <div class="bg-white rounded-lg shadow-sm">
+      <div class="p-3 bg-slate-50 border-b font-semibold text-sm flex items-center">
+        📈 Tracking — Baseline + Variance
+        <span class="ml-auto flex gap-2 items-center text-xs">
+          <label>Baseline #:</label>
+          <input type="number" value="0" class="border rounded px-2 py-0.5 w-16"/>
+          <button class="bg-blue-600 text-white rounded px-3 py-1">📸 Save baseline</button>
+        </span>
+      </div>
+      <div class="p-4">
+        <h3 class="font-semibold text-sm mb-2">📚 Baselines lưu trữ</h3>
+        <table class="w-full text-xs mb-5">
+          <thead class="bg-slate-50 text-left">
+            <tr><th class="p-2">#</th><th>Tên</th><th>Snapshot date</th></tr>
+          </thead>
+          <tbody>
+            <tr class="border-t"><td class="p-2">0</td><td>Baseline 0 (kế hoạch gốc)</td><td>2026-05-04 09:15</td></tr>
+            <tr class="border-t"><td class="p-2">1</td><td>Baseline 1 (sau review tuần 1)</td><td>2026-05-11 10:30</td></tr>
+          </tbody>
+        </table>
+
+        <div class="bg-red-50 p-2 rounded text-xs mb-2">⚠️ 4 task đang trễ tiến độ</div>
+        <h3 class="font-semibold text-sm mb-2">📈 Variance vs Baseline #0</h3>
+        <table class="w-full text-xs">
+          <thead class="bg-slate-50 text-left">
+            <tr><th class="p-2">Task</th><th>Baseline start</th><th>Current start</th><th>Baseline finish</th><th>Current finish</th><th>Finish var (h)</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            <tr class="border-t"><td class="p-2">Thiết kế</td><td>04/05 08:00</td><td>04/05 08:00</td><td>08/05 17:00</td><td>08/05 17:00</td><td class="text-green-600 font-semibold">0</td><td><span class="badge b-ok">ON TIME</span></td></tr>
+            <tr class="border-t"><td class="p-2">Xin phép xây dựng</td><td>11/05 08:00</td><td>11/05 08:00</td><td>22/05 17:00</td><td>22/05 17:00</td><td class="text-green-600 font-semibold">0</td><td><span class="badge b-ok">ON TIME</span></td></tr>
+            <tr class="border-t bg-red-50"><td class="p-2"><b>Xây tường</b></td><td>28/05 08:00</td><td>02/06 08:00</td><td>17/06 17:00</td><td>22/06 17:00</td><td class="text-red-600 font-semibold">+40</td><td><span class="badge b-crit">SLIPPING</span></td></tr>
+            <tr class="border-t bg-red-50"><td class="p-2"><b>Lắp điện nước</b></td><td>04/06 08:00</td><td>09/06 08:00</td><td>12/06 17:00</td><td>17/06 17:00</td><td class="text-red-600 font-semibold">+40</td><td><span class="badge b-crit">SLIPPING</span></td></tr>
+            <tr class="border-t bg-red-50"><td class="p-2"><b>Sơn nội thất</b></td><td>18/06 08:00</td><td>23/06 08:00</td><td>24/06 17:00</td><td>29/06 17:00</td><td class="text-red-600 font-semibold">+40</td><td><span class="badge b-crit">SLIPPING</span></td></tr>
+            <tr class="border-t bg-red-50"><td class="p-2"><b>◆ Bàn giao</b></td><td>25/06 08:00</td><td>30/06 08:00</td><td>25/06 08:00</td><td>30/06 08:00</td><td class="text-red-600 font-semibold">+40</td><td><span class="badge b-crit">SLIPPING</span></td></tr>
+          </tbody>
+        </table>
+        <p class="text-xs text-slate-500 mt-3">
+          💡 So sánh ngày Start/Finish hiện tại vs baseline. <b>Finish var</b> dương = trễ; âm = sớm hơn kế hoạch.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- LEVELING -->
+  <div id="screen-leveling" class="screen">
+    <div class="bg-white rounded-lg shadow-sm">
+      <div class="p-3 bg-slate-50 border-b font-semibold text-sm flex items-center">
+        ⚖️ Resource Leveling — auto-resolve over-allocation
+        <span class="ml-auto"><button class="bg-blue-600 text-white rounded px-3 py-1 text-xs">🛠️ Auto-level</button></span>
+      </div>
+      <div class="p-4">
+        <div class="bg-green-50 border border-green-200 p-2 rounded text-xs mb-3">
+          ✅ Đã chạy 3 iterations, converged: true, đã delay 2 task để giải quyết overallocation
+        </div>
+
+        <h3 class="font-semibold text-sm mb-2">⚠️ Overallocations (trước khi level)</h3>
+        <table class="w-full text-xs mb-4">
+          <thead class="bg-slate-50 text-left">
+            <tr><th class="p-2">Resource</th><th>Ngày</th><th>Used</th><th>Max</th><th>Over</th></tr>
+          </thead>
+          <tbody>
+            <tr class="border-t bg-red-50"><td class="p-2"><b>Kiến trúc sư</b></td><td>2026-05-11</td><td>1.5</td><td>1.0</td><td class="text-red-600 font-bold">+0.5</td></tr>
+            <tr class="border-t bg-red-50"><td class="p-2"><b>Kiến trúc sư</b></td><td>2026-05-12</td><td>1.5</td><td>1.0</td><td class="text-red-600 font-bold">+0.5</td></tr>
+            <tr class="border-t bg-red-50"><td class="p-2"><b>Đội xây dựng</b></td><td>2026-05-28</td><td>3.5</td><td>3.0</td><td class="text-red-600 font-bold">+0.5</td></tr>
+          </tbody>
+        </table>
+
+        <h3 class="font-semibold text-sm mb-2">📊 Resource daily load — peak</h3>
+        <table class="w-full text-xs mb-4">
+          <thead class="bg-slate-50 text-left">
+            <tr><th class="p-2">Resource</th><th>Số ngày làm</th><th>Peak load</th><th>Max units</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            <tr class="border-t"><td class="p-2">Kiến trúc sư</td><td>15</td><td>1.0</td><td>1.0</td><td><span class="badge b-ok">OK</span></td></tr>
+            <tr class="border-t"><td class="p-2">Đội xây dựng</td><td>20</td><td>3.0</td><td>3.0</td><td><span class="badge b-ok">OK</span></td></tr>
+            <tr class="border-t"><td class="p-2">Đội điện nước</td><td>7</td><td>2.0</td><td>2.0</td><td><span class="badge b-ok">OK</span></td></tr>
+            <tr class="border-t"><td class="p-2">Thợ sơn</td><td>5</td><td>2.0</td><td>2.0</td><td><span class="badge b-ok">OK</span></td></tr>
+          </tbody>
+        </table>
+
+        <h3 class="font-semibold text-sm mb-2">⏱️ Delays applied</h3>
+        <table class="w-full text-xs">
+          <thead class="bg-slate-50 text-left">
+            <tr><th class="p-2">Task</th><th>Từ ngày</th><th>Constraint mới (SNET)</th><th>Lý do</th></tr>
+          </thead>
+          <tbody>
+            <tr class="border-t"><td class="p-2">Đào móng</td><td>2026-05-11</td><td>2026-05-13</td><td>Overallocation of Kiến trúc sư on 2026-05-11</td></tr>
+            <tr class="border-t"><td class="p-2">Lắp điện nước</td><td>2026-06-04</td><td>2026-06-05</td><td>Resource conflict</td></tr>
+          </tbody>
+        </table>
+        <p class="text-xs text-slate-500 mt-3">
+          💡 Thuật toán greedy: với mỗi ngày overallocated, chọn task có priority THẤP nhất (slack cao nhất tie-break) để delay 1 working day, set <span class="kbd">constraint_type=SNET</span>, rồi re-run CPM.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- EVM -->
+  <div id="screen-evm" class="screen">
+    <div class="bg-white rounded-lg shadow-sm">
+      <div class="p-3 bg-slate-50 border-b font-semibold text-sm flex items-center">
+        💰 Earned Value Management
+        <span class="ml-auto flex gap-2 items-center text-xs">
+          <label>Status date:</label>
+          <input type="date" value="2026-05-25" class="border rounded px-2 py-0.5"/>
+        </span>
+      </div>
+      <div class="p-4">
+        <div class="grid grid-cols-4 gap-3">
+          <div class="border rounded p-3"><div class="text-[10px] text-slate-500">BAC (Budget)</div><div class="text-2xl font-bold">$17,360</div></div>
+          <div class="border rounded p-3"><div class="text-[10px] text-slate-500">BCWS (Planned Value)</div><div class="text-2xl font-bold">$5,200</div></div>
+          <div class="border rounded p-3"><div class="text-[10px] text-slate-500">BCWP (Earned Value)</div><div class="text-2xl font-bold">$4,800</div></div>
+          <div class="border rounded p-3"><div class="text-[10px] text-slate-500">ACWP (Actual Cost)</div><div class="text-2xl font-bold">$5,500</div></div>
+
+          <div class="border rounded p-3"><div class="text-[10px] text-slate-500">CV (Cost Variance)</div><div class="text-2xl font-bold text-red-600">-$700</div></div>
+          <div class="border rounded p-3"><div class="text-[10px] text-slate-500">SV (Schedule Var)</div><div class="text-2xl font-bold text-red-600">-$400</div></div>
+          <div class="border rounded p-3"><div class="text-[10px] text-slate-500">CPI</div><div class="text-2xl font-bold text-amber-600">0.87</div></div>
+          <div class="border rounded p-3"><div class="text-[10px] text-slate-500">SPI</div><div class="text-2xl font-bold text-amber-600">0.92</div></div>
+
+          <div class="border rounded p-3"><div class="text-[10px] text-slate-500">EAC (Estimate at Completion)</div><div class="text-2xl font-bold">$19,954</div></div>
+          <div class="border rounded p-3"><div class="text-[10px] text-slate-500">ETC (To Complete)</div><div class="text-2xl font-bold">$14,454</div></div>
+          <div class="border rounded p-3"><div class="text-[10px] text-slate-500">VAC (Variance at Compl.)</div><div class="text-2xl font-bold text-red-600">-$2,594</div></div>
+          <div class="border rounded p-3"><div class="text-[10px] text-slate-500">TCPI</div><div class="text-2xl font-bold text-red-600">1.05</div></div>
+        </div>
+
+        <h3 class="font-semibold text-sm mt-5 mb-2">Per-task breakdown</h3>
+        <table class="w-full text-xs">
+          <thead class="bg-slate-50 text-left">
+            <tr><th class="p-2">Task</th><th>%</th><th>Planned</th><th>BCWS</th><th>BCWP</th><th>ACWP</th></tr>
+          </thead>
+          <tbody>
+            <tr class="border-t"><td class="p-2">Thiết kế</td><td>100%</td><td>$2,000</td><td>$2,000</td><td>$2,000</td><td>$2,400</td></tr>
+            <tr class="border-t"><td class="p-2">Xin phép xây dựng</td><td>60%</td><td>$2,000</td><td>$1,800</td><td>$1,200</td><td>$1,500</td></tr>
+            <tr class="border-t"><td class="p-2">Đào móng</td><td>100%</td><td>$960</td><td>$960</td><td>$960</td><td>$1,000</td></tr>
+            <tr class="border-t"><td class="p-2">Đổ bê tông móng</td><td>30%</td><td>$960</td><td>$440</td><td>$288</td><td>$600</td></tr>
+            <tr class="border-t"><td class="p-2">Xây tường</td><td>0%</td><td>$7,200</td><td>$0</td><td>$0</td><td>$0</td></tr>
+            <tr class="border-t"><td class="p-2">Lắp điện nước</td><td>0%</td><td>$2,800</td><td>$0</td><td>$0</td><td>$0</td></tr>
+            <tr class="border-t"><td class="p-2">Sơn nội thất</td><td>0%</td><td>$1,440</td><td>$0</td><td>$0</td><td>$0</td></tr>
+          </tbody>
+        </table>
+
+        <div class="mt-4 bg-slate-50 rounded p-3 text-xs">
+          <b>📖 Diễn giải:</b>
+          <ul class="list-disc pl-5 mt-1 space-y-1 text-slate-700">
+            <li><b>CPI = 0.87</b> &lt; 1 → vượt ngân sách (chi nhiều hơn giá trị đạt được).</li>
+            <li><b>SPI = 0.92</b> &lt; 1 → trễ tiến độ (so với kế hoạch).</li>
+            <li><b>EAC = $19,954</b> dự phóng tổng chi phí cuối project (cao hơn BAC $2,594).</li>
+            <li><b>TCPI = 1.05</b> → cần hiệu suất 105% cho phần còn lại để vẫn về đúng ngân sách (khó).</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- XML I/O -->
+  <div id="screen-xml" class="screen">
+    <div class="bg-white rounded-lg shadow-sm">
+      <div class="p-3 bg-slate-50 border-b font-semibold text-sm">📂 Project XML Import / Export</div>
+      <div class="grid grid-cols-2 gap-6 p-6">
+        <div class="border rounded p-4">
+          <h3 class="font-semibold mb-2">⬇️ Export</h3>
+          <p class="text-xs text-slate-600 mb-3">Tải file <span class="kbd">project_1.xml</span> chứa toàn bộ tasks, dependencies, resources, assignments.</p>
+          <button class="bg-blue-600 text-white rounded px-4 py-1.5 text-sm">⬇️ Download XML</button>
+          <div class="mt-4 text-xs">
+            <b>Schema:</b>
+            <pre class="bg-slate-900 text-slate-100 p-2 mt-1 rounded text-[10px] overflow-x-auto">&lt;Project&gt;
+  &lt;Name&gt;Demo — Xây nhà&lt;/Name&gt;
+  &lt;StartDate&gt;2026-05-04T08:00:00&lt;/StartDate&gt;
+  &lt;Tasks&gt;
+    &lt;Task&gt;
+      &lt;UID&gt;1&lt;/UID&gt;
+      &lt;Name&gt;Thiết kế&lt;/Name&gt;
+      &lt;DurationHours&gt;40&lt;/DurationHours&gt;
+      &lt;ConstraintType&gt;ASAP&lt;/ConstraintType&gt;
+      ...
+    &lt;/Task&gt;
+  &lt;/Tasks&gt;
+  &lt;Resources&gt;...&lt;/Resources&gt;
+  &lt;Predecessors&gt;...&lt;/Predecessors&gt;
+  &lt;Assignments&gt;...&lt;/Assignments&gt;
+&lt;/Project&gt;</pre>
+          </div>
+        </div>
+        <div class="border rounded p-4">
+          <h3 class="font-semibold mb-2">⬆️ Import</h3>
+          <p class="text-xs text-slate-600 mb-3">Upload file XML để tạo project mới. Mọi UID được map lại sang ID mới.</p>
+          <input type="file" class="text-sm mb-3"/><br/>
+          <button class="bg-blue-600 text-white rounded px-4 py-1.5 text-sm">⬆️ Upload &amp; Import</button>
+          <div class="mt-4 p-2 bg-green-50 border border-green-200 rounded text-xs">
+            ✅ <b>Imported</b> as project_id = 2 (8 tasks, 4 resources, 9 dependencies, 7 assignments)
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  </section>
+</main>
+
+<script>
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (event && event.currentTarget) event.currentTarget.classList.add('active');
+}
+</script>
+</body>
+</html>
