@@ -29,8 +29,8 @@ services:
       MINIO_ROOT_USER: planner
       MINIO_ROOT_PASSWORD: plannerplanner
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "9000:9000"   # S3 API
+      - "9001:9001"   # Web console
     volumes:
       - minio-data:/data
 

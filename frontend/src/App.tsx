@@ -7,6 +7,7 @@ import LoginPage from "@/pages/LoginPage";
 import EvmPage from "@/pages/EvmPage";
 import LevelingPage from "@/pages/LevelingPage";
 import TrackingPage from "@/pages/TrackingPage";
+import SalesPlannerPage from "@/pages/SalesPlannerPage";
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const nav = useNavigate();
@@ -31,6 +32,7 @@ export default function App() {
         <h1>📊 ProjectWeb — MS Project clone</h1>
         <nav style={{ display: "flex", gap: 12, alignItems: "center" }}>
           <NavLink to="/" end className={({ isActive }) => (isActive ? "active" : "")}>Projects</NavLink>
+          <NavLink to="/sales-planner" className={({ isActive }) => (isActive ? "active" : "")}>🤖 Sales Planner</NavLink>
           {user ? (
             <>
               <span style={{ color: "#cbd5e1", fontSize: 12 }}>👤 {user.username}</span>
@@ -50,6 +52,7 @@ export default function App() {
           <Route path="/projects/:pid/tracking" element={<AuthGuard><TrackingPage /></AuthGuard>} />
           <Route path="/projects/:pid/leveling" element={<AuthGuard><LevelingPage /></AuthGuard>} />
           <Route path="/projects/:pid/evm" element={<AuthGuard><EvmPage /></AuthGuard>} />
+          <Route path="/sales-planner" element={<AuthGuard><SalesPlannerPage /></AuthGuard>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
