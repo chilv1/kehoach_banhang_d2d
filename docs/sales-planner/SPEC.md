@@ -49,18 +49,82 @@ constraint-checked plan that can be reviewed, edited and applied.
 | Auth | JWT HS256 (existing) | inherits `backend/app/services/auth.py` |
 | Container | Docker Compose | local dev, single-node deploy |
 
-## 3. Module Boundaries
+## 3. Data Domain Glossary
+
+| Term | Meaning |
+|---|---|
+| **BR** | Branch (vd. LI3BR = Lima zona 3) |
+| **BC** | Business Center (vd. LI3BC12) |
+| **Distrito** | District inside Lima |
+| **Code Ubicacion** | Sale point code (CP01, CP82…) |
+| **Tipo DF/CP** | Type of sales spot (DF Fijo, BTS Upgrade, Mercado, Rural, …) |
+| **Horario traffico** | Traffic time window (vd. 08:00-16:00) |
+| **Fecha Alta Traffico** | Day-of-week or category when traffic peaks |
+| **Prioridad** | 1 = highest, 4 = lowest |
+| **PR Code** | Promoter staff identifier (vd. LI3PR10116) |
+| **Grupo** | Team of PRs (Grupo 1, Grupo 2, …) |
+| **KPI Trabajo** | Contracted minimum work days/month per PR |
+| **Cantidad Día Trabajo** | Allocated/available work days |
+| **Meta Activation** | Activation target |
+| **Meta MNP** | Mobile Number Portability target |
+| **Meta TV360** | TV360 target |
+| **Bipay** | Digital wallet metric |
+| **Campaña OK** | Final review status (OK / NO OK) |
+
+## 4. High-Level Architecture
+
+```
+┌──────────────────────────────────────────────────────────────────────────┐
+│                          Browser (Next.js SPA)                           │
+│   ┌───────────────┐  ┌───────────────┐  ┌──────────────┐  ┌──────────┐  │
+│   │ SalesGantt    │  │ FilterBar     │  │ AI Command   │  │ MapView  │  │
+│   │ (Canvas/SVG)  │  │ Grouping      │  │ Bar (Copilot)│  │ (Leaflet)│  │
+│   └───────┬───────┘  └───────┬───────┘  └──────┬───────┘  └────┬─────┘  │
+│           └──────────────────┴──────────────────┴───────────────┘        │
+│                                       │                                   │
+│                              TanStack Query / Zustand                     │
+└────────────────────────────────────────┬─────────────────────────────────┘
+                                         │ HTTPS / JSON
+┌────────────────────────────────────────┴─────────────────────────────────┐
+│                          FastAPI Backend                                  │
+│   ┌────────────┐  ┌────────────┐  ┌─────────────┐  ┌──────────────┐     │
+│   │ /imports/* │  │ /campaigns │  │ /tasks/*    │  │ /ai/*        │     │
+│   │ /gantt/*   │  │ /dashboard │  │ /map/*      │  │ /exports/*   │     │
+│   └─────┬──────┘  └─────┬──────┘  └──────┬──────┘  └──────┬───────┘     │
+│         └────────────────┴───────────────┴────────────────┘              │
+│                          │                                                │
+│   ┌──────────────────────┼───────────────────────────────────────┐       │
+│   │ services/            │                                       │       │
+│   │  excel_import.py     │  ai_planner.py        scheduler.py    │       │
+│   │  validator.py        │  constraint_solver.py  cost.py        │       │
+│   │  route_optimizer.py  │  audit.py              variance.py    │       │
+│   └──────────────────────┼───────────────────────────────────────┘       │
+└────────────────────────────────────────┬─────────────────────────────────┘
+                                         │
+       ┌─────────────────┬───────────────┼──────────────────┬──────────┐
+       │                 │               │                  │          │
+   ┌───┴──────┐    ┌─────┴────┐   ┌──────┴──────┐    ┌──────┴────┐  ┌──┴─────┐
+   │ Postgres │    │ Redis    │   │ MinIO       │    │ RQ Worker │  │ LLM    │
+   │ (data)   │    │ (queue+  │   │ (raw xlsx)  │    │ (import+  │  │ (OAI/  │
+   │          │    │  cache)  │   │             │    │  ai jobs) │  │ Claude)│
+   └──────────┘    └──────────┘   └─────────────┘    └───────────┘  └────────┘
+```
+
+## 5. Module Boundaries
 
 ```
 backend/app/
-├── sales_planner/                    ← NEW MODULE
-│   ├── models/                       SQLAlchemy ORM (18 entities)
+├── sales_planner/                    ← NEW MODULE (this turn)
+│   ├── models/                       SQLAlchemy ORM
 │   ├── schemas/                      Pydantic IO contracts
 │   ├── services/
 │   │   ├── excel_import.py           Parses Campana Plan.xlsx (4 sheets)
-│   │   ├── ai_planner.py             /goal /optimize /risk /recover /simulate /explain /daily
-│   │   ├── constraint_solver.py      C1..C10 validation + haversine
-│   │   └── audit.py                  Audit log writes
+│   │   ├── validator.py              Business-rule validation
+│   │   ├── ai_planner.py             /goal /optimize /risk /recover /simulate /explain
+│   │   ├── constraint_solver.py      OR-Tools CP-SAT wrapper
+│   │   ├── route_optimizer.py        Lat/Lng cluster for daily route
+│   │   ├── audit.py                  Audit log writes
+│   │   └── permission.py             RBAC checks
 │   └── routers/
 │       ├── imports_router.py
 │       ├── sales_router.py
@@ -68,21 +132,33 @@ backend/app/
 │       ├── dashboard_router.py
 │       ├── map_router.py
 │       └── exports_router.py
+├── services/                         (existing — CPM, EVM, leveling reused)
+└── routers/                          (existing — auth reused)
 
 frontend/src/
-├── pages/SalesPlannerPage.tsx
+├── pages/SalesPlannerPage.tsx        ← NEW (this turn)
 ├── components/
 │   ├── SalesGantt/                   Canvas/SVG Gantt (Phase 2 custom)
 │   ├── AICommandBar/                 Copilot-style /goal command bar
 │   ├── SalesFilterBar/               BR / BC / Distrito / Tipo / Status / Priority filters
 │   ├── MapView/                      Leaflet
-│   └── DashboardView/                KPI cards + charts
+│   ├── DashboardView/                KPI cards + charts
+│   ├── KPIPanel/
+│   └── AIReasoningPanel/
 └── lib/
     ├── ai-schema.ts                  TS types matching AI JSON schema
     └── gantt-utils.ts
 ```
 
-## 4. SLA Targets
+## 6. Out-of-scope for this iteration
+
+- Real LLM integration (stub returns deterministic plan; provider abstraction in place).
+- Full OR-Tools CP-SAT (skeleton + simple greedy heuristic; CP-SAT in Phase 5).
+- Custom Canvas/SVG Gantt (uses `gantt-task-react` adapter as Phase 1; custom in Phase 2).
+- Mobile responsive design (desktop-first; mobile in Phase 6).
+- Multi-tenant SaaS (single-tenant only; multi-tenant in Phase 7).
+
+## 7. SLA Targets
 
 | Metric | Target |
 |---|---|
@@ -93,7 +169,7 @@ frontend/src/
 | API p99 latency | < 500ms |
 | Uptime | 99.5% (single-region) |
 
-## 5. Phase Gate Summary
+## 8. Phase Gate Summary
 
 | Phase | Output | Owner | Eta |
 |---|---|---|---|
@@ -104,6 +180,3 @@ frontend/src/
 | 5 | OR-Tools constraint solver + What-if | AI + BE | 2 wk |
 | 6 | QA, perf, security, Docker, CI/CD | QA + DevOps | 2 wk |
 | **Total** | — | — | **~3-4 months full-time** |
-
-See also: `docs/sales-planner/BACKLOG.md` (87 user stories) and
-`docs/sales-planner/AI_PLANNER_SPEC.md` (JSON schema + hard constraints).
