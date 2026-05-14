@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<title>Mockup — Quản lý Campaign bán hàng D2D</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<script src="tailwind.js"></script>
+<style>
+  body { font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+  .badge { display:inline-block; padding:2px 8px; border-radius:9999px; font-size:11px; font-weight:600; }
+  .b-draft     { background:#e5e7eb; color:#374151; }
+  .b-planned   { background:#dbeafe; color:#1e40af; }
+  .b-running   { background:#fef3c7; color:#92400e; }
+  .b-done      { background:#dcfce7; color:#166534; }
+  .b-cancelled { background:#fee2e2; color:#991b1b; }
+  .nav-item.active { background:#1e40af; color:white; }
+  .screen { display:none; }
+  .screen.active { display:block; }
+  .arrow { width: 22px; height: 22px; display:inline-flex; align-items:center; justify-content:center; }
+  .kbd { font-family: ui-monospace,SFMono-Regular,Menlo,monospace; background:#f3f4f6; border:1px solid #e5e7eb; padding:1px 6px; border-radius:4px; font-size:12px; }
+</style>
+</head>
+<body class="bg-slate-100 text-slate-800">
+
+<!-- HEADER -->
+<header class="bg-white border-b shadow-sm">
+  <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+    <div>
+      <h1 class="text-xl font-bold text-slate-900">🎯 Hệ thống Quản lý Campaign bán hàng D2D</h1>
+      <p class="text-sm text-slate-500">Mockup — Streamlit + SQLite • Demo workflow lập kế hoạch & quản lý chương trình bán hàng</p>
+    </div>
+    <div class="text-xs text-slate-400">v0.2 • mockup/index.html</div>
+  </div>
+</header>
+
+<!-- WORKFLOW DIAGRAM -->
+<section class="max-w-7xl mx-auto px-6 mt-6">
+  <div class="bg-white rounded-xl shadow-sm p-5">
+    <h2 class="font-semibold mb-4 text-slate-700">🔄 Quy trình tổng thể (campaign lifecycle)</h2>
+    <div class="flex flex-wrap items-center gap-2 text-sm">
+      <div class="badge b-draft">DRAFT</div>
+      <div class="arrow text-slate-400">→</div>
+      <div class="badge b-planned">PLANNED</div>
+      <div class="arrow text-slate-400">→</div>
+      <div class="badge b-running">RUNNING</div>
+      <div class="arrow text-slate-400">→</div>
+      <div class="badge b-done">DONE</div>
+      <div class="arrow text-slate-400">|</div>
+      <div class="badge b-cancelled">CANCELLED</div>
+      <span class="text-slate-500 ml-4">(có thể huỷ từ DRAFT / PLANNED / RUNNING)</span>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-3 mt-4 text-xs text-slate-600">
+      <div class="border rounded-lg p-3"><b class="text-slate-800">DRAFT</b><br/>Vừa tạo, chưa duyệt. Plan Generator sinh tự động hoặc tạo thủ công.</div>
+      <div class="border rounded-lg p-3"><b class="text-slate-800">PLANNED</b><br/>Đã duyệt bởi BC/Manager. PR đã được phân, lịch chốt.</div>
+      <div class="border rounded-lg p-3"><b class="text-slate-800">RUNNING</b><br/>Đang chạy thực tế tại điểm bán.</div>
+      <div class="border rounded-lg p-3"><b class="text-slate-800">DONE</b><br/>Đã nhập kết quả + checklist + đóng campaign.</div>
+      <div class="border rounded-lg p-3"><b class="text-slate-800">CANCELLED</b><br/>Huỷ vì lý do thời tiết, thiếu PR, sự cố…</div>
+    </div>
+  </div>
+</section>
+
+<!-- MAIN -->
+<main class="max-w-7xl mx-auto px-6 my-6 grid grid-cols-12 gap-4">
+
+  <!-- SIDEBAR -->
+  <aside class="col-span-12 md:col-span-3">
+    <nav class="bg-white rounded-xl shadow-sm p-2 space-y-1 sticky top-4">
+      <button onclick="showScreen('home')"     class="nav-item active w-full text-left px-3 py-2 rounded-md text-sm">🏠 Home</button>
+      <button onclick="showScreen('ubic')"     class="nav-item w-full text-left px-3 py-2 rounded-md text-sm">📍 Ubicacion</button>
+      <button onclick="showScreen('pr')"       class="nav-item w-full text-left px-3 py-2 rounded-md text-sm">👥 PR / Grupo</button>
+      <button onclick="showScreen('gen')"      class="nav-item w-full text-left px-3 py-2 rounded-md text-sm">⚙️ Plan Generator</button>
+      <button onclick="showScreen('camps')"    class="nav-item w-full text-left px-3 py-2 rounded-md text-sm">🎯 Campaigns (List/Kanban)</button>
+      <button onclick="showScreen('form')"     class="nav-item w-full text-left px-3 py-2 rounded-md text-sm">📝 Campaign Form</button>
+      <button onclick="showScreen('result')"   class="nav-item w-full text-left px-3 py-2 rounded-md text-sm">✅ Resultados</button>
+      <button onclick="showScreen('dash')"     class="nav-item w-full text-left px-3 py-2 rounded-md text-sm">📊 Dashboard</button>
+      <button onclick="showScreen('gantt')"    class="nav-item w-full text-left px-3 py-2 rounded-md text-sm">📈 Gantt chart</button>
+      <hr class="my-2" />
+      <button onclick="showScreen('process')"  class="nav-item w-full text-left px-3 py-2 rounded-md text-sm bg-amber-50 text-amber-900">📖 Giải thích quy trình</button>
+    </nav>
+  </aside>
+
+  <!-- CONTENT -->
+  <section class="col-span-12 md:col-span-9 space-y-4">
+
+  <!-- HOME -->
+  <div id="screen-home" class="screen active">
+    <div class="bg-white rounded-xl shadow-sm p-6">
+      <h2 class="text-lg font-bold">🏠 Home</h2>
+      <p class="text-sm text-slate-500 mt-1">Trang chủ — KPI tổng quan + nhanh tay vào các bước.</p>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-5">
+        <div class="border rounded-lg p-4"><div class="text-xs text-slate-500">Ubicaciones</div><div class="text-2xl font-bold">81</div></div>
+        <div class="border rounded-lg p-4"><div class="text-xs text-slate-500">Promoters</div><div class="text-2xl font-bold">68</div></div>
+        <div class="border rounded-lg p-4"><div class="text-xs text-slate-500">Campaigns tháng</div><div class="text-2xl font-bold">81</div></div>
+        <div class="border rounded-lg p-4"><div class="text-xs text-slate-500">Campaigns DONE</div><div class="text-2xl font-bold text-green-600">23</div></div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+        <div class="border rounded-lg p-4">
+          <h3 class="font-semibold mb-2">📌 Các bước sử dụng</h3>
+          <ol class="list-decimal pl-5 text-sm text-slate-700 space-y-1">
+            <li>Nhập <b>Ubicacion</b> (điểm bán)</li>
+            <li>Nhập <b>PR / Grupo</b> (nhân lực)</li>
+            <li><b>Plan Generator</b> sinh DRAFT cho tháng</li>
+            <li>Vào <b>Campaigns</b> duyệt → PLANNED</li>
+            <li>Hằng ngày: <b>Resultados</b> ghi kết quả, đóng DONE</li>
+            <li><b>Dashboard</b> theo dõi tổng thể</li>
+          </ol>
+        </div>
+        <div class="border rounded-lg p-4">
+          <h3 class="font-semibold mb-2">🔄 Trạng thái campaign</h3>
+          <div class="flex flex-wrap gap-2">
+            <span class="badge b-draft">DRAFT</span><span>→</span>
+            <span class="badge b-planned">PLANNED</span><span>→</span>
+            <span class="badge b-running">RUNNING</span><span>→</span>
+            <span class="badge b-done">DONE</span>
+          </div>
+          <p class="text-xs text-slate-500 mt-3">Mọi chuyển trạng thái được ghi <span class="kbd">campaign_log</span>.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- UBICACION -->
+  <div id="screen-ubic" class="screen">
+    <div class="bg-white rounded-xl shadow-sm p-6">
+      <h2 class="text-lg font-bold">📍 Ubicacion (điểm bán) — master data</h2>
+      <p class="text-sm text-slate-500 mt-1">Form thêm mới + bulk editor. Mỗi điểm có toạ độ, lịch traffic, prioridad, Meta/Gasto/Merch mặc định.</p>
+
+      <div class="flex gap-2 mt-4 text-sm">
+        <div class="px-3 py-1.5 rounded-md bg-slate-100 border">📋 Danh sách</div>
+        <div class="px-3 py-1.5 rounded-md bg-blue-600 text-white">➕ Thêm mới</div>
+        <div class="px-3 py-1.5 rounded-md bg-slate-100 border">✏️ Sửa hàng loạt</div>
+      </div>
+
+      <div class="border rounded-lg p-4 mt-3 bg-slate-50">
+        <h3 class="font-semibold text-sm mb-3 text-slate-700">Thông tin chung</h3>
+        <div class="grid grid-cols-3 gap-3 text-sm">
+          <label>Code Ubicacion *<br/><input class="border rounded w-full px-2 py-1" value="CP82"/></label>
+          <label>BR *<br/><input class="border rounded w-full px-2 py-1" value="LI3BR"/></label>
+          <label>BC *<br/><input class="border rounded w-full px-2 py-1" value="LI3BC06"/></label>
+          <label>Departamento<br/><input class="border rounded w-full px-2 py-1" value="LIMA"/></label>
+          <label>Distrito<br/><input class="border rounded w-full px-2 py-1" value="SURCO"/></label>
+          <label>Tipo DF/CP<br/>
+            <select class="border rounded w-full px-2 py-1">
+              <option>Mercado</option><option>BTS Upgrade</option><option>Rural</option>
+              <option>DF Fijo</option><option>Plaza</option>
+            </select>
+          </label>
+          <label>Horario traffico<br/><input class="border rounded w-full px-2 py-1" value="08:00 - 16:00"/></label>
+          <label>Fecha Alta Traffico<br/>
+            <select class="border rounded w-full px-2 py-1">
+              <option>WEEKDAY</option><option>WEEKEND</option><option>MONDAY</option>
+              <option>TUESDAY</option><option>WEDNESDAY</option><option>THURSDAY</option>
+              <option>FRIDAY</option><option>SATURDAY</option><option>SUNDAY</option>
+            </select>
+          </label>
+          <label>Prioridad<br/><input type="number" class="border rounded w-full px-2 py-1" value="1"/></label>
+          <label>Latitud<br/><input class="border rounded w-full px-2 py-1" value="-12.140921"/></label>
+          <label>Longitud<br/><input class="border rounded w-full px-2 py-1" value="-76.995037"/></label>
+          <label>Cantidad ngày/tháng<br/><input type="number" class="border rounded w-full px-2 py-1" value="1"/></label>
+        </div>
+
+        <h3 class="font-semibold text-sm mt-5 mb-3 text-slate-700">🎯 Meta (chỉ tiêu)</h3>
+        <div class="grid grid-cols-5 gap-3 text-sm">
+          <label>Prepago<br/><input type="number" class="border rounded w-full px-2 py-1" value="15"/></label>
+          <label>Postpago<br/><input type="number" class="border rounded w-full px-2 py-1" value="2"/></label>
+          <label>Bipay<br/><input type="number" class="border rounded w-full px-2 py-1" value="2"/></label>
+          <label>TV360<br/><input type="number" class="border rounded w-full px-2 py-1" value="13"/></label>
+          <label>MNP<br/><input type="number" class="border rounded w-full px-2 py-1" value="4"/></label>
+        </div>
+
+        <h3 class="font-semibold text-sm mt-5 mb-3 text-slate-700">💵 Gasto / 🎁 Merch (rút gọn)</h3>
+        <div class="grid grid-cols-4 gap-3 text-sm">
+          <label>Comida<br/><input class="border rounded w-full px-2 py-1" value="2"/></label>
+          <label>Movilidad<br/><input class="border rounded w-full px-2 py-1" value="0"/></label>
+          <label>Bolígrafo<br/><input class="border rounded w-full px-2 py-1" value="2"/></label>
+          <label>Taza<br/><input class="border rounded w-full px-2 py-1" value="5"/></label>
+        </div>
+
+        <div class="mt-4 flex gap-2">
+          <button class="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-semibold">💾 Lưu</button>
+          <button class="px-4 py-2 bg-white border rounded-md text-sm">Huỷ</button>
+        </div>
+      </div>
+
+      <h3 class="font-semibold mt-6 mb-2 text-sm text-slate-700">Danh sách (preview 5 dòng)</h3>
+      <table class="w-full text-sm border">
+        <thead class="bg-slate-100"><tr class="text-left">
+          <th class="p-2">Code</th><th>BC</th><th>Distrito</th><th>Tipo</th><th>Traffic</th><th>Prio</th>
+        </tr></thead>
+        <tbody>
+          <tr class="border-t"><td class="p-2">CP01</td><td>LI3BC12</td><td>SURCO</td><td>DF Fijo</td><td>WEEKDAY</td><td>1</td></tr>
+          <tr class="border-t"><td class="p-2">CP02</td><td>LI3BC11</td><td>SJM 2</td><td>BTS Upgrade</td><td>WEEKEND</td><td>1</td></tr>
+          <tr class="border-t"><td class="p-2">CP03</td><td>LI3BC06</td><td>SURCO</td><td>Zone 5%</td><td>SUNDAY</td><td>1</td></tr>
+          <tr class="border-t"><td class="p-2">CP17</td><td>LI3BC08</td><td>MIRAFLORES</td><td>BTS Upgrade</td><td>SUNDAY</td><td>2</td></tr>
+          <tr class="border-t"><td class="p-2">CP22</td><td>LI2BC11</td><td>LA MOLINA</td><td>BTS Upgrade</td><td>TUESDAY</td><td>2</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- PR -->
+  <div id="screen-pr" class="screen">
+    <div class="bg-white rounded-xl shadow-sm p-6">
+      <h2 class="text-lg font-bold">👥 PR / Grupo (nhân lực)</h2>
+      <p class="text-sm text-slate-500 mt-1">Mỗi PR thuộc 1 BC + 1 Grupo, có capacity ngày/tháng.</p>
+
+      <div class="border rounded-lg p-4 mt-4 bg-slate-50">
+        <div class="grid grid-cols-3 gap-3 text-sm">
+          <label>PR Code *<br/><input class="border rounded w-full px-2 py-1" value="LI3PR10116"/></label>
+          <label>BR *<br/><input class="border rounded w-full px-2 py-1" value="LI3BR"/></label>
+          <label>BC *<br/><input class="border rounded w-full px-2 py-1" value="LI3BC03"/></label>
+          <label>Owner code<br/><input class="border rounded w-full px-2 py-1" value="AF_ANACC_LI3"/></label>
+          <label>Tipo<br/>
+            <select class="border rounded w-full px-2 py-1">
+              <option>Exclusive</option><option>Part-time</option><option>Nuevo</option>
+            </select>
+          </label>
+          <label>Grupo<br/><input class="border rounded w-full px-2 py-1" value="Grupo 1"/></label>
+          <label>KPI Trabajo<br/><input class="border rounded w-full px-2 py-1" value="25"/></label>
+          <label>Cantidad ngày/tháng<br/><input class="border rounded w-full px-2 py-1" value="18"/></label>
+          <label>Estado<br/>
+            <select class="border rounded w-full px-2 py-1"><option>OK</option><option>NO OK</option></select>
+          </label>
+        </div>
+        <div class="mt-4">
+          <button class="px-4 py-2 bg-blue-600 text-white rounded-md text-sm">💾 Lưu</button>
+        </div>
+      </div>
+
+      <h3 class="font-semibold mt-6 mb-2 text-sm text-slate-700">Phân bố PR theo BC</h3>
+      <div class="flex gap-1 items-end h-32 border-b">
+        <div class="w-12 bg-blue-500" style="height:60%"></div>
+        <div class="w-12 bg-blue-500" style="height:85%"></div>
+        <div class="w-12 bg-blue-500" style="height:40%"></div>
+        <div class="w-12 bg-blue-500" style="height:55%"></div>
+        <div class="w-12 bg-blue-500" style="height:90%"></div>
+        <div class="w-12 bg-blue-500" style="height:70%"></div>
+        <div class="w-12 bg-blue-500" style="height:50%"></div>
+        <div class="w-12 bg-blue-500" style="height:65%"></div>
+        <div class="w-12 bg-blue-500" style="height:75%"></div>
+      </div>
+      <div class="flex gap-1 text-xs text-slate-500 mt-1">
+        <div class="w-12 text-center">BC03</div><div class="w-12 text-center">BC06</div>
+        <div class="w-12 text-center">BC07</div><div class="w-12 text-center">BC08</div>
+        <div class="w-12 text-center">BC10</div><div class="w-12 text-center">BC11</div>
+        <div class="w-12 text-center">BC12</div><div class="w-12 text-center">BC13</div>
+        <div class="w-12 text-center">BC11x</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLAN GENERATOR -->
+  <div id="screen-gen" class="screen">
+    <div class="bg-white rounded-xl shadow-sm p-6">
+      <h2 class="text-lg font-bold">⚙️ Plan Generator — Sinh kế hoạch tháng</h2>
+      <p class="text-sm text-slate-500 mt-1">Tự động tạo hàng loạt campaign DRAFT cho 1 tháng theo prioridad + lịch traffic + capacity PR.</p>
+
+      <div class="grid grid-cols-4 gap-3 mt-4 text-sm">
+        <label>Năm<br/><input class="border rounded w-full px-2 py-1" value="2026"/></label>
+        <label>Tháng<br/><input class="border rounded w-full px-2 py-1" value="5"/></label>
+        <div class="border rounded p-3 bg-slate-50"><div class="text-xs text-slate-500">Ubic active</div><b>81</b></div>
+        <div class="border rounded p-3 bg-slate-50"><div class="text-xs text-slate-500">PR active</div><b>68</b></div>
+      </div>
+
+      <label class="flex items-center gap-2 mt-4 text-sm">
+        <input type="checkbox" checked /> Xoá DRAFT cũ trong tháng trước khi sinh
+      </label>
+
+      <div class="mt-3">
+        <button class="px-5 py-2.5 bg-blue-600 text-white rounded-md text-sm font-semibold">🚀 Sinh kế hoạch</button>
+      </div>
+
+      <div class="mt-5 border-l-4 border-green-500 bg-green-50 p-3 text-sm">
+        ✅ <b>Đã sinh 81/81 campaign DRAFT.</b> Vào trang <span class="kbd">Campaigns</span> để duyệt và chuyển PLANNED.
+      </div>
+
+      <details class="mt-3 border rounded-lg p-3">
+        <summary class="text-sm font-semibold cursor-pointer text-amber-700">⚠️ 62 thông báo (click để xem)</summary>
+        <div class="text-xs text-slate-600 mt-2 space-y-1">
+          <div>• PR LI3PR10099 còn dư 18 ngày</div>
+          <div>• PR LI3PR10114 còn dư 18 ngày</div>
+          <div>• Thiếu 0 ngày campaign cho CP41 — đã đủ ✓</div>
+          <div>• …</div>
+        </div>
+      </details>
+
+      <hr class="my-5"/>
+      <h3 class="font-semibold text-sm text-slate-700 mb-2">🛠️ Hành động hàng loạt</h3>
+      <div class="grid grid-cols-3 gap-3 text-sm">
+        <div class="border rounded p-3 bg-slate-50"><div class="text-xs text-slate-500">DRAFT</div><b>81</b></div>
+        <button class="px-4 py-2 bg-emerald-600 text-white rounded text-sm">✅ Duyệt toàn bộ DRAFT → PLANNED</button>
+        <div></div>
+      </div>
+
+      <div class="mt-5 bg-amber-50 border border-amber-200 rounded p-3 text-xs">
+        <b class="text-amber-900">🧠 Cách thuật toán hoạt động (4 pass):</b>
+        <ol class="list-decimal pl-5 mt-1 space-y-0.5 text-amber-900">
+          <li>Sắp xếp Ubic theo <span class="kbd">prioridad</span> tăng dần (1 trước 2).</li>
+          <li><b>Pass 1</b>: cùng BC + đúng <span class="kbd">Fecha Alta Traffico</span>.</li>
+          <li><b>Pass 2</b>: nếu thiếu PR cùng BC → cho phép khác BC, ghi chú lại.</li>
+          <li><b>Pass 3</b>: vẫn thiếu → ngày ngoài lịch traffic.</li>
+          <li><b>Pass 4</b>: chưa có PR → vẫn tạo DRAFT (cần gán thủ công).</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <!-- CAMPAIGNS LIST + KANBAN -->
+  <div id="screen-camps" class="screen">
+    <div class="bg-white rounded-xl shadow-sm p-6">
+      <h2 class="text-lg font-bold">🎯 Campaigns — danh sách + Kanban + lịch</h2>
+      <div class="grid grid-cols-6 gap-2 mt-4 text-xs">
+        <div class="border rounded p-2 bg-slate-50"><div>Tổng</div><b class="text-lg">81</b></div>
+        <div class="border rounded p-2"><div>DRAFT</div><b class="text-lg">15</b></div>
+        <div class="border rounded p-2"><div>PLANNED</div><b class="text-lg">38</b></div>
+        <div class="border rounded p-2"><div>RUNNING</div><b class="text-lg">5</b></div>
+        <div class="border rounded p-2"><div>DONE</div><b class="text-lg text-green-600">23</b></div>
+        <div class="border rounded p-2"><div>CANCELLED</div><b class="text-lg text-red-600">0</b></div>
+      </div>
+
+      <div class="flex gap-2 mt-5 border-b">
+        <div class="px-3 py-2 border-b-2 border-blue-600 text-blue-700 font-semibold text-sm">🗂️ Kanban</div>
+        <div class="px-3 py-2 text-sm text-slate-500">📋 Danh sách</div>
+        <div class="px-3 py-2 text-sm text-slate-500">🗓️ Lịch</div>
+        <div class="px-3 py-2 text-sm text-slate-500">🔍 Chi tiết</div>
+      </div>
+
+      <!-- Kanban -->
+      <div class="grid grid-cols-5 gap-3 mt-4">
+        <div>
+          <div class="font-semibold text-sm mb-2"><span class="badge b-draft">DRAFT</span> · 15</div>
+          <div class="space-y-2">
+            <div class="border rounded-lg p-2 text-xs bg-slate-50"><b>CMP-202605-CP41-01</b><br/>2026-05-08 · LI3BC06 · CP41<br/>PR: <span class="text-slate-400">—</span></div>
+            <div class="border rounded-lg p-2 text-xs bg-slate-50"><b>CMP-202605-CP55-01</b><br/>2026-05-10 · LI3BC08 · CP55<br/>PR: LI3PR10081</div>
+            <div class="border rounded-lg p-2 text-xs bg-slate-50">… 13 nữa</div>
+          </div>
+        </div>
+        <div>
+          <div class="font-semibold text-sm mb-2"><span class="badge b-planned">PLANNED</span> · 38</div>
+          <div class="space-y-2">
+            <div class="border rounded-lg p-2 text-xs"><b>CMP-202605-CP01-01</b><br/>2026-05-04 · LI3BC12 · CP01<br/>PR: LI3PR10136</div>
+            <div class="border rounded-lg p-2 text-xs"><b>CMP-202605-CP02-01</b><br/>2026-05-09 · LI3BC11 · CP02<br/>PR: LI3PR10202</div>
+            <div class="border rounded-lg p-2 text-xs">… 36 nữa</div>
+          </div>
+        </div>
+        <div>
+          <div class="font-semibold text-sm mb-2"><span class="badge b-running">RUNNING</span> · 5</div>
+          <div class="space-y-2">
+            <div class="border rounded-lg p-2 text-xs bg-amber-50"><b>CMP-202605-CP07-01</b><br/>2026-05-12 · LI3BC06 · CP07<br/>PR: LI3PR10139</div>
+            <div class="border rounded-lg p-2 text-xs bg-amber-50"><b>CMP-202605-CP12-01</b><br/>2026-05-12 · LI2BC13 · CP12<br/>PR: LI3PR10204</div>
+          </div>
+        </div>
+        <div>
+          <div class="font-semibold text-sm mb-2"><span class="badge b-done">DONE</span> · 23</div>
+          <div class="space-y-2">
+            <div class="border rounded-lg p-2 text-xs bg-green-50"><b>CMP-202605-CP03-01</b><br/>2026-05-03 · LI3BC06 · CP03<br/>PR: LI3PR10139</div>
+            <div class="border rounded-lg p-2 text-xs bg-green-50"><b>CMP-202605-CP06-01</b><br/>2026-05-06 · LI3BC06 · CP06<br/>PR: LI3PR10139</div>
+          </div>
+        </div>
+        <div>
+          <div class="font-semibold text-sm mb-2"><span class="badge b-cancelled">CANCELLED</span> · 0</div>
+          <div class="text-xs text-slate-400">—</div>
+        </div>
+      </div>
+
+      <p class="text-xs text-slate-500 mt-4">💡 Click vào 1 thẻ → mở tab <b>Chi tiết</b> để chuyển trạng thái, xem log.</p>
+    </div>
+
+    <!-- Detail panel -->
+    <div class="bg-white rounded-xl shadow-sm p-6 mt-4">
+      <h3 class="font-bold text-base">🔍 Chi tiết campaign</h3>
+      <div class="grid grid-cols-4 gap-3 mt-3 text-sm">
+        <div class="border rounded p-3"><div class="text-xs text-slate-500">Status</div><b><span class="badge b-running">RUNNING</span></b></div>
+        <div class="border rounded p-3"><div class="text-xs text-slate-500">Ngày</div><b>2026-05-12</b></div>
+        <div class="border rounded p-3"><div class="text-xs text-slate-500">BC</div><b>LI3BC06</b></div>
+        <div class="border rounded p-3"><div class="text-xs text-slate-500">Vị trí</div><b>CP07</b></div>
+      </div>
+      <p class="text-sm mt-3"><b>Mã</b>: <span class="kbd">CMP-202605-CP07-01</span> · <b>Tên</b>: SURCO — Mercado · <b>PR</b>: LI3PR10139 · <b>Grupo</b>: Grupo 4</p>
+
+      <h4 class="font-semibold mt-4 text-sm">Chuyển trạng thái</h4>
+      <div class="flex gap-2 mt-2 text-sm">
+        <select class="border rounded px-2 py-1"><option>DONE</option><option>CANCELLED</option></select>
+        <input class="border rounded px-2 py-1 flex-1" placeholder="Ghi chú"/>
+        <button class="px-4 py-1.5 bg-blue-600 text-white rounded">➡️ Chuyển sang DONE</button>
+      </div>
+
+      <h4 class="font-semibold mt-5 text-sm">Lịch sử (campaign_log)</h4>
+      <table class="w-full text-xs mt-2">
+        <thead class="bg-slate-100 text-left">
+          <tr><th class="p-2">Khi</th><th>Hành động</th><th>Cũ → Mới</th><th>Ghi chú</th><th>Actor</th></tr>
+        </thead>
+        <tbody>
+          <tr class="border-t"><td class="p-2">2026-05-12 09:15</td><td>STATUS</td><td>PLANNED → RUNNING</td><td>Start morning shift</td><td>BC LI3BC06</td></tr>
+          <tr class="border-t"><td class="p-2">2026-05-11 14:00</td><td>STATUS</td><td>DRAFT → PLANNED</td><td>Duyệt hàng loạt</td><td>bulk_approver</td></tr>
+          <tr class="border-t"><td class="p-2">2026-05-11 10:00</td><td>CREATED</td><td>— → DRAFT</td><td>Tạo campaign</td><td>planner</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- CAMPAIGN FORM -->
+  <div id="screen-form" class="screen">
+    <div class="bg-white rounded-xl shadow-sm p-6">
+      <h2 class="text-lg font-bold">📝 Campaign Form — tạo / sửa thủ công</h2>
+      <p class="text-sm text-slate-500 mt-1">Mặc định Meta/Gasto/Merch lấy từ Ubicacion đã chọn — có thể override.</p>
+
+      <div class="flex gap-3 mt-4 text-sm">
+        <label class="flex items-center gap-1"><input type="radio" checked/> Tạo mới</label>
+        <label class="flex items-center gap-1"><input type="radio"/> Sửa campaign có sẵn</label>
+      </div>
+
+      <h3 class="font-semibold text-sm mt-5 mb-2">Thông tin chung</h3>
+      <div class="grid grid-cols-3 gap-3 text-sm">
+        <label>Ubicacion *<br/>
+          <select class="border rounded w-full px-2 py-1"><option>CP01 — SURCO — DF Fijo</option><option>CP02</option></select>
+        </label>
+        <label>Ngày *<br/><input type="date" class="border rounded w-full px-2 py-1" value="2026-05-18"/></label>
+        <label>Horario<br/><input class="border rounded w-full px-2 py-1" value="08:00 - 16:00"/></label>
+        <label>Tên campaign<br/><input class="border rounded w-full px-2 py-1" value="SURCO — DF Fijo"/></label>
+        <label>Phân công PR<br/>
+          <select class="border rounded w-full px-2 py-1"><option>LI3PR10136</option><option>LI3PR10116</option></select>
+        </label>
+        <label>Grupo<br/><input class="border rounded w-full px-2 py-1" value="Grupo 1"/></label>
+        <label>Prioridad<br/><input type="number" class="border rounded w-full px-2 py-1" value="1"/></label>
+        <label>Leader<br/><input class="border rounded w-full px-2 py-1" value="AF_ANACC_LI3"/></label>
+        <label>Notas<br/><input class="border rounded w-full px-2 py-1"/></label>
+      </div>
+
+      <h3 class="font-semibold text-sm mt-5 mb-2">🎯 Meta</h3>
+      <div class="grid grid-cols-5 gap-3 text-sm">
+        <label>Prepago<br/><input type="number" class="border rounded w-full px-2 py-1" value="15"/></label>
+        <label>Postpago<br/><input type="number" class="border rounded w-full px-2 py-1" value="2"/></label>
+        <label>Bipay<br/><input type="number" class="border rounded w-full px-2 py-1" value="2"/></label>
+        <label>TV360<br/><input type="number" class="border rounded w-full px-2 py-1" value="13"/></label>
+        <label>MNP<br/><input type="number" class="border rounded w-full px-2 py-1" value="4"/></label>
+      </div>
+      <h3 class="font-semibold text-sm mt-5 mb-2">💵 Gasto + 🎁 Merch (rút gọn)</h3>
+      <div class="grid grid-cols-5 gap-3 text-sm">
+        <label>Comida<br/><input class="border rounded w-full px-2 py-1" value="2"/></label>
+        <label>Hotel<br/><input class="border rounded w-full px-2 py-1" value="0"/></label>
+        <label>Movilidad<br/><input class="border rounded w-full px-2 py-1" value="0"/></label>
+        <label>Bolígrafo<br/><input class="border rounded w-full px-2 py-1" value="2"/></label>
+        <label>Taza<br/><input class="border rounded w-full px-2 py-1" value="5"/></label>
+      </div>
+
+      <div class="mt-5">
+        <button class="px-5 py-2 bg-blue-600 text-white rounded-md text-sm font-semibold">💾 Lưu campaign</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULTADOS -->
+  <div id="screen-result" class="screen">
+    <div class="bg-white rounded-xl shadow-sm p-6">
+      <h2 class="text-lg font-bold">✅ Resultados — Ghi kết quả + Checklist + Đóng campaign</h2>
+      <p class="text-sm text-slate-500 mt-1">PR/Leader nhập kết quả thực tế cuối ngày, đánh dấu checklist, đóng campaign.</p>
+
+      <div class="grid grid-cols-4 gap-3 mt-4 text-sm">
+        <div class="border rounded p-3"><div class="text-xs text-slate-500">Status</div><b><span class="badge b-running">RUNNING</span></b></div>
+        <div class="border rounded p-3"><div class="text-xs text-slate-500">Ngày</div><b>2026-05-12</b></div>
+        <div class="border rounded p-3"><div class="text-xs text-slate-500">Vị trí</div><b>CP07</b></div>
+        <div class="border rounded p-3"><div class="text-xs text-slate-500">PR</div><b>LI3PR10139</b></div>
+      </div>
+
+      <h3 class="font-semibold text-sm mt-5">🆚 Meta vs Resultado</h3>
+      <table class="w-full text-sm mt-2 border">
+        <thead class="bg-slate-100 text-left">
+          <tr><th class="p-2">Chỉ tiêu</th><th>Meta</th><th>Resultado</th></tr>
+        </thead>
+        <tbody>
+          <tr class="border-t"><td class="p-2">Prepago</td><td>15</td><td><input class="border rounded px-2 py-1 w-24" value="12"/></td></tr>
+          <tr class="border-t"><td class="p-2">Postpago</td><td>2</td><td><input class="border rounded px-2 py-1 w-24" value="1"/></td></tr>
+          <tr class="border-t"><td class="p-2">Bipay</td><td>2</td><td><input class="border rounded px-2 py-1 w-24" value="2"/></td></tr>
+          <tr class="border-t"><td class="p-2">TV360</td><td>13</td><td><input class="border rounded px-2 py-1 w-24" value="8"/></td></tr>
+          <tr class="border-t"><td class="p-2">MNP</td><td>4</td><td><input class="border rounded px-2 py-1 w-24" value="3"/></td></tr>
+        </tbody>
+      </table>
+
+      <h3 class="font-semibold text-sm mt-5">💵 Gasto thực tế</h3>
+      <input class="border rounded px-2 py-1 w-40" value="120"/>
+
+      <h3 class="font-semibold text-sm mt-5">📋 Checklist trợ lý</h3>
+      <div class="grid grid-cols-3 gap-2 mt-2 text-sm">
+        <label class="flex items-center gap-2"><input type="checkbox" checked/> Evidencia pago</label>
+        <label class="flex items-center gap-2"><input type="checkbox" checked/> Merch entregado</label>
+        <label class="flex items-center gap-2"><input type="checkbox" checked/> Checklist OK</label>
+        <label class="flex items-center gap-2"><input type="checkbox" checked/> Activaciones OK</label>
+        <label class="flex items-center gap-2"><input type="checkbox"/> Digital OK</label>
+        <label class="flex items-center gap-2"><input type="checkbox" checked/> Campaña OK (tổng kết)</label>
+      </div>
+
+      <label class="block mt-4 text-sm">DF/BTS Code<br/>
+        <input class="border rounded px-2 py-1 w-72" value="DF12-BTS5566"/>
+      </label>
+
+      <label class="block mt-3 text-sm">Nota<br/>
+        <textarea class="border rounded px-2 py-1 w-full" rows="2">Trời mưa nhẹ buổi sáng, khách quay lại buổi chiều</textarea>
+      </label>
+
+      <div class="mt-5 flex gap-2">
+        <button class="px-5 py-2 bg-blue-600 text-white rounded-md text-sm font-semibold">💾 Lưu kết quả</button>
+        <button class="px-5 py-2 bg-emerald-600 text-white rounded-md text-sm font-semibold">🏁 Lưu & chuyển sang DONE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="screen-dash" class="screen">
+    <div class="bg-white rounded-xl shadow-sm p-6">
+      <h2 class="text-lg font-bold">📊 Dashboard — funnel + Meta vs Resultado + chi phí</h2>
+
+      <div class="grid grid-cols-6 gap-2 mt-4 text-xs">
+        <div class="border rounded p-2"><div>Ubicaciones</div><b class="text-lg">81</b></div>
+        <div class="border rounded p-2"><div>Promoters</div><b class="text-lg">68</b></div>
+        <div class="border rounded p-2"><div>Campaigns</div><b class="text-lg">81</b></div>
+        <div class="border rounded p-2"><div>DRAFT</div><b class="text-lg">15</b></div>
+        <div class="border rounded p-2"><div>PLANNED</div><b class="text-lg">38</b></div>
+        <div class="border rounded p-2"><div>DONE</div><b class="text-lg text-green-600">23</b></div>
+      </div>
+
+      <h3 class="font-semibold mt-5 text-sm">🌀 Funnel trạng thái</h3>
+      <div class="space-y-1 mt-2">
+        <div class="flex items-center gap-2 text-sm"><span class="w-24 text-right">DRAFT</span>
+          <div class="h-6 bg-slate-300 rounded" style="width:18%"></div><span>15</span></div>
+        <div class="flex items-center gap-2 text-sm"><span class="w-24 text-right">PLANNED</span>
+          <div class="h-6 bg-blue-400 rounded" style="width:47%"></div><span>38</span></div>
+        <div class="flex items-center gap-2 text-sm"><span class="w-24 text-right">RUNNING</span>
+          <div class="h-6 bg-amber-400 rounded" style="width:6%"></div><span>5</span></div>
+        <div class="flex items-center gap-2 text-sm"><span class="w-24 text-right">DONE</span>
+          <div class="h-6 bg-green-500 rounded" style="width:28%"></div><span>23</span></div>
+        <div class="flex items-center gap-2 text-sm"><span class="w-24 text-right">CANCELLED</span>
+          <div class="h-6 bg-red-300 rounded" style="width:0%"></div><span>0</span></div>
+      </div>
+
+      <h3 class="font-semibold mt-6 text-sm">🆚 Meta vs Resultado</h3>
+      <table class="w-full text-sm mt-2 border">
+        <thead class="bg-slate-100 text-left"><tr><th class="p-2">Metric</th><th>Meta</th><th>Resultado</th><th>%</th></tr></thead>
+        <tbody>
+          <tr class="border-t"><td class="p-2">Prepago</td><td>1,215</td><td>520</td><td class="text-amber-700">42.8%</td></tr>
+          <tr class="border-t"><td class="p-2">Postpago</td><td>162</td><td>67</td><td class="text-amber-700">41.4%</td></tr>
+          <tr class="border-t"><td class="p-2">TV360</td><td>1,053</td><td>460</td><td class="text-amber-700">43.7%</td></tr>
+          <tr class="border-t"><td class="p-2">MNP</td><td>324</td><td>153</td><td class="text-amber-700">47.2%</td></tr>
+        </tbody>
+      </table>
+
+      <h3 class="font-semibold mt-6 text-sm">💵 Chi phí kế hoạch theo BC (stacked)</h3>
+      <div class="flex items-end gap-1 mt-2 h-32 border-b">
+        <div class="w-12 bg-blue-500" style="height:60%"></div>
+        <div class="w-12 bg-blue-500" style="height:85%"></div>
+        <div class="w-12 bg-blue-500" style="height:40%"></div>
+        <div class="w-12 bg-blue-500" style="height:90%"></div>
+        <div class="w-12 bg-blue-500" style="height:55%"></div>
+        <div class="w-12 bg-blue-500" style="height:75%"></div>
+      </div>
+
+      <h3 class="font-semibold mt-6 text-sm">🗺️ Bản đồ campaign (Lima, Peru)</h3>
+      <div class="border rounded h-48 bg-gradient-to-br from-blue-50 to-cyan-100 mt-2 relative">
+        <div class="absolute" style="left:15%; top:30%">📍</div>
+        <div class="absolute" style="left:35%; top:40%">📍</div>
+        <div class="absolute" style="left:55%; top:25%">📍</div>
+        <div class="absolute" style="left:30%; top:60%">📍</div>
+        <div class="absolute" style="left:70%; top:55%">📍</div>
+        <div class="absolute" style="left:50%; top:75%">📍</div>
+        <div class="absolute bottom-2 right-2 text-xs text-slate-500">Hiển thị 81 điểm có toạ độ</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROJECT GANTT (MS Project style) -->
+  <div id="screen-gantt" class="screen">
+    <div class="bg-white rounded-xl shadow-sm p-6">
+      <h2 class="text-lg font-bold">📈 Project Gantt — MS Project style</h2>
+      <p class="text-sm text-slate-500 mt-1">Mỗi vị trí (Ubicacion) = 1 task có Start / End / Duration / Nguồn lực / Tiến độ. Tự phát hiện xung đột.</p>
+
+      <div class="grid grid-cols-4 gap-3 mt-4 text-sm">
+        <label>Năm<br/><input class="border rounded w-full px-2 py-1" value="2026"/></label>
+        <label>Tháng<br/><input class="border rounded w-full px-2 py-1" value="5"/></label>
+        <label>BC<br/><input class="border rounded w-full px-2 py-1" value="Tất cả"/></label>
+        <label>Status<br/><input class="border rounded w-full px-2 py-1" value="Tất cả"/></label>
+      </div>
+
+      <div class="grid grid-cols-6 gap-2 mt-4 text-xs">
+        <div class="border rounded p-2"><div>Tổng task</div><b class="text-lg">81</b></div>
+        <div class="border rounded p-2"><div>Tổng ca</div><b class="text-lg">83</b></div>
+        <div class="border rounded p-2"><div>Hoàn tất</div><b class="text-lg text-green-600">23</b></div>
+        <div class="border rounded p-2"><div>Đang chạy</div><b class="text-lg text-amber-600">5</b></div>
+        <div class="border rounded p-2"><div>Tiến độ TB</div><b class="text-lg">38%</b></div>
+        <div class="border rounded p-2 bg-red-50"><div>Xung đột</div><b class="text-lg text-red-600">7</b></div>
+      </div>
+
+      <div class="flex gap-2 mt-5 border-b">
+        <div class="px-3 py-2 border-b-2 border-blue-600 text-blue-700 font-semibold text-sm">📋 Task table</div>
+        <div class="px-3 py-2 text-slate-500 text-sm">📊 Gantt biểu đồ</div>
+        <div class="px-3 py-2 text-slate-500 text-sm">🧑 Tải nguồn lực</div>
+        <div class="px-3 py-2 text-slate-500 text-sm">⚠️ Xung đột</div>
+      </div>
+
+      <h3 class="font-semibold text-sm mt-4">📋 Task table — mỗi dòng = 1 task</h3>
+      <div class="overflow-x-auto mt-2 border rounded">
+        <table class="w-full text-xs">
+          <thead class="bg-slate-100 text-left">
+            <tr>
+              <th class="p-2">Vị trí</th><th>BC</th><th>Distrito</th><th>Prio</th>
+              <th>Start</th><th>End</th><th>Dur</th>
+              <th>Tổng</th><th>DONE</th><th>RUN</th><th>PLAN</th>
+              <th>Nguồn lực</th><th>#PR</th><th>% Tiến độ</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="border-t hover:bg-slate-50">
+              <td class="p-2 font-mono">CP01</td><td>LI3BC12</td><td>SURCO</td><td>1</td>
+              <td>04/05</td><td>25/05</td><td>4</td>
+              <td>4</td><td class="text-green-600 font-semibold">2</td><td>0</td><td>2</td>
+              <td class="text-slate-600">LI3PR10136</td><td>1</td>
+              <td><div class="bg-slate-200 rounded h-3 w-32 relative">
+                <div class="bg-green-500 h-3 rounded" style="width:50%"></div>
+                <span class="absolute inset-0 text-[10px] text-center text-white font-bold">50%</span></div></td>
+            </tr>
+            <tr class="border-t hover:bg-slate-50">
+              <td class="p-2 font-mono">CP02</td><td>LI3BC11</td><td>SJM 2</td><td>1</td>
+              <td>02/05</td><td>23/05</td><td>5</td>
+              <td>5</td><td class="text-green-600 font-semibold">1</td><td>0</td><td>3</td>
+              <td class="text-slate-600">LI3PR10202</td><td>1</td>
+              <td><div class="bg-slate-200 rounded h-3 w-32 relative">
+                <div class="bg-amber-500 h-3 rounded" style="width:20%"></div>
+                <span class="absolute inset-0 text-[10px] text-center text-white font-bold">20%</span></div></td>
+            </tr>
+            <tr class="border-t hover:bg-slate-50">
+              <td class="p-2 font-mono">CP03</td><td>LI3BC06</td><td>SURCO</td><td>1</td>
+              <td>03/05</td><td>24/05</td><td>4</td>
+              <td>4</td><td class="text-green-600 font-semibold">3</td><td>1</td><td>0</td>
+              <td class="text-slate-600">LI3PR10139, LI3PR10146</td><td>2</td>
+              <td><div class="bg-slate-200 rounded h-3 w-32 relative">
+                <div class="bg-green-500 h-3 rounded" style="width:75%"></div>
+                <span class="absolute inset-0 text-[10px] text-center text-white font-bold">75%</span></div></td>
+            </tr>
+            <tr class="border-t hover:bg-slate-50">
+              <td class="p-2 font-mono">CP07</td><td>LI3BC06</td><td>SURCO</td><td>1</td>
+              <td>06/05</td><td>26/05</td><td>4</td>
+              <td>4</td><td class="text-green-600 font-semibold">2</td><td>1</td><td>1</td>
+              <td class="text-slate-600">LI3PR10139</td><td>1</td>
+              <td><div class="bg-slate-200 rounded h-3 w-32 relative">
+                <div class="bg-green-500 h-3 rounded" style="width:50%"></div>
+                <span class="absolute inset-0 text-[10px] text-center text-white font-bold">50%</span></div></td>
+            </tr>
+            <tr class="border-t hover:bg-slate-50">
+              <td class="p-2 font-mono">CP12</td><td>LI2BC13</td><td>SAN BORJA</td><td>1</td>
+              <td>12/05</td><td>19/05</td><td>2</td>
+              <td>2</td><td>0</td><td class="text-amber-600 font-semibold">1</td><td>1</td>
+              <td class="text-slate-600">LI3PR10204</td><td>1</td>
+              <td><div class="bg-slate-200 rounded h-3 w-32 relative">
+                <div class="bg-red-500 h-3 rounded" style="width:0%"></div>
+                <span class="absolute inset-0 text-[10px] text-center text-slate-600 font-bold">0%</span></div></td>
+            </tr>
+            <tr class="border-t hover:bg-slate-50">
+              <td class="p-2 font-mono">CP17</td><td>LI3BC08</td><td>MIRAFLORES</td><td>2</td>
+              <td>10/05</td><td>24/05</td><td>3</td>
+              <td>3</td><td class="text-green-600 font-semibold">2</td><td>0</td><td>0</td>
+              <td class="text-slate-600">LI3PR10081</td><td>1</td>
+              <td><div class="bg-slate-200 rounded h-3 w-32 relative">
+                <div class="bg-amber-500 h-3 rounded" style="width:67%"></div>
+                <span class="absolute inset-0 text-[10px] text-center text-white font-bold">67%</span></div></td>
+            </tr>
+            <tr class="border-t hover:bg-slate-50 bg-red-50">
+              <td class="p-2 font-mono">CP41</td><td>LI3BC06</td><td>SURCO</td><td>2</td>
+              <td>08/05</td><td>18/05</td><td>2</td>
+              <td>2</td><td>0</td><td>0</td><td>0</td>
+              <td class="text-red-600 italic">— chưa gán PR —</td><td>0</td>
+              <td><div class="bg-slate-200 rounded h-3 w-32 relative">
+                <div class="bg-red-400 h-3 rounded" style="width:0%"></div>
+                <span class="absolute inset-0 text-[10px] text-center text-slate-600 font-bold">0%</span></div></td>
+            </tr>
+            <tr><td colspan="14" class="p-2 text-center text-slate-400 italic">… 74 task khác</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 class="font-semibold text-sm mt-6">📊 Gantt biểu đồ — task span + tiến độ + hôm nay</h3>
+      <p class="text-xs text-slate-500 mt-1">
+        Thanh nhạt = task span (kế hoạch). Ô vuông = ngày có campaign, màu theo status. Đường đỏ đứt = hôm nay (12/05).
+      </p>
+      <div class="flex flex-wrap gap-3 mt-2 text-xs">
+        <span class="inline-flex items-center gap-1"><span class="inline-block w-4 h-3 rounded" style="background:#e0e7ff;border:1px solid #c7d2fe"></span> Task span (kế hoạch)</span>
+        <span class="inline-flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-sm" style="background:#9ca3af"></span> DRAFT</span>
+        <span class="inline-flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-sm" style="background:#3b82f6"></span> PLANNED</span>
+        <span class="inline-flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-sm" style="background:#f59e0b"></span> RUNNING</span>
+        <span class="inline-flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-sm" style="background:#10b981"></span> DONE</span>
+        <span class="inline-flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-sm" style="background:#ef4444"></span> CANCELLED / Chưa PR</span>
+        <span class="inline-flex items-center gap-1"><span class="inline-block w-px h-3 border-l-2 border-red-500 border-dashed"></span> Hôm nay</span>
+      </div>
+
+      <style>
+        .gx-row { display:grid; grid-template-columns: 270px repeat(31, minmax(0, 1fr)); border-bottom:1px solid #f1f5f9; position:relative; }
+        .gx-row > .gx-cell { height:30px; border-right:1px dotted #f1f5f9; }
+        .gx-row > .gx-label { font-size:11px; padding:5px 8px; border-right:1px solid #e5e7eb; background:#fafafa; display:flex; flex-direction:column; justify-content:center; line-height:1.2; }
+        .gx-span { position:absolute; height:8px; top:50%; transform:translateY(-50%); background:#e0e7ff; border-radius:4px; border:1px solid #c7d2fe; pointer-events:none; z-index:1; }
+        .gx-marker { width:14px; height:14px; border-radius:3px; margin:8px auto; box-shadow:0 1px 2px rgba(0,0,0,.15); position:relative; z-index:2; }
+        .gx-today { position:absolute; top:0; bottom:0; width:0; border-left:2px dashed #ef4444; z-index:10; pointer-events:none; }
+        .mk-d { background:#9ca3af; }
+        .mk-p { background:#3b82f6; }
+        .mk-r { background:#f59e0b; }
+        .mk-o { background:#10b981; }
+        .mk-c { background:#ef4444; }
+        .mk-x { background:#ef4444; outline:2px solid #ef4444; outline-offset:1px; }
+      </style>
+
+      <div class="border rounded-lg overflow-hidden mt-3 relative">
+        <div class="grid bg-slate-100 text-[10px] text-center text-slate-600 border-b" style="grid-template-columns: 270px repeat(31, minmax(0, 1fr));">
+          <div class="px-2 py-1 text-left font-semibold border-r">Task (Ubicacion · BC · %)</div>
+          <div class="py-1 border-r">1</div><div class="py-1 border-r">2</div>
+          <div class="py-1 border-r">3</div><div class="py-1 border-r">4</div>
+          <div class="py-1 border-r">5</div><div class="py-1 border-r">6</div>
+          <div class="py-1 border-r">7</div><div class="py-1 border-r">8</div>
+          <div class="py-1 border-r">9</div><div class="py-1 border-r">10</div>
+          <div class="py-1 border-r">11</div><div class="py-1 border-r bg-red-100 font-bold text-red-700">12</div>
+          <div class="py-1 border-r">13</div><div class="py-1 border-r">14</div>
+          <div class="py-1 border-r">15</div><div class="py-1 border-r">16</div>
+          <div class="py-1 border-r">17</div><div class="py-1 border-r">18</div>
+          <div class="py-1 border-r">19</div><div class="py-1 border-r">20</div>
+          <div class="py-1 border-r">21</div><div class="py-1 border-r">22</div>
+          <div class="py-1 border-r">23</div><div class="py-1 border-r">24</div>
+          <div class="py-1 border-r">25</div><div class="py-1 border-r">26</div>
+          <div class="py-1 border-r">27</div><div class="py-1 border-r">28</div>
+          <div class="py-1 border-r">29</div><div class="py-1 border-r">30</div>
+          <div class="py-1">31</div>
+        </div>
+
+        <!-- CP01: span 4..25, markers d4,d11,d19,d25 -->
+        <div class="gx-row">
+          <div class="gx-label"><b>CP01</b> · LI3BC12 · <span class="text-green-600">50%</span><br/><span class="text-[10px] text-slate-500">04→25 · 4 ngày · PR10136</span></div>
+          <div class="gx-span" style="left: calc(270px + (100% - 270px) * 3/31); width: calc((100% - 270px) * 22/31);"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"><div class="gx-marker mk-o"></div></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"><div class="gx-marker mk-o"></div></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"><div class="gx-marker mk-p"></div></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"><div class="gx-marker mk-p"></div></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div>
+        </div>
+
+        <!-- CP02: span 2..23 -->
+        <div class="gx-row">
+          <div class="gx-label"><b>CP02</b> · LI3BC11 · <span class="text-amber-600">20%</span><br/><span class="text-[10px] text-slate-500">02→23 · 5 ngày · PR10202</span></div>
+          <div class="gx-span" style="left: calc(270px + (100% - 270px) * 1/31); width: calc((100% - 270px) * 22/31);"></div>
+          <div class="gx-cell"></div>
+          <div class="gx-cell"><div class="gx-marker mk-o"></div></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"><div class="gx-marker mk-o"></div></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"><div class="gx-marker mk-p"></div></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"><div class="gx-marker mk-p"></div></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+        </div>
+
+        <!-- CP03: span 3..24 -->
+        <div class="gx-row">
+          <div class="gx-label"><b>CP03</b> · LI3BC06 · <span class="text-green-600">75%</span><br/><span class="text-[10px] text-slate-500">03→24 · 4 ngày · PR10139,PR10146</span></div>
+          <div class="gx-span" style="left: calc(270px + (100% - 270px) * 2/31); width: calc((100% - 270px) * 22/31);"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"><div class="gx-marker mk-o"></div></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"><div class="gx-marker mk-o"></div></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"><div class="gx-marker mk-r"></div></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"><div class="gx-marker mk-p"></div></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+        </div>
+
+        <!-- CP07: span 6..26 -->
+        <div class="gx-row">
+          <div class="gx-label"><b>CP07</b> · LI3BC06 · <span class="text-green-600">50%</span><br/><span class="text-[10px] text-slate-500">06→26 · 4 ngày · PR10139</span></div>
+          <div class="gx-span" style="left: calc(270px + (100% - 270px) * 5/31); width: calc((100% - 270px) * 21/31);"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"><div class="gx-marker mk-o"></div></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div>
+          <div class="gx-cell"><div class="gx-marker mk-r"></div></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"><div class="gx-marker mk-p"></div></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"><div class="gx-marker mk-p"></div></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+        </div>
+
+        <!-- CP12: span 12..19 -->
+        <div class="gx-row">
+          <div class="gx-label"><b>CP12</b> · LI2BC13 · <span class="text-red-600">0%</span><br/><span class="text-[10px] text-slate-500">12→19 · 2 ngày · PR10204</span></div>
+          <div class="gx-span" style="left: calc(270px + (100% - 270px) * 11/31); width: calc((100% - 270px) * 8/31);"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"><div class="gx-marker mk-r"></div></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"><div class="gx-marker mk-p"></div></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+        </div>
+
+        <!-- CP17: span 10..24 -->
+        <div class="gx-row">
+          <div class="gx-label"><b>CP17</b> · LI3BC08 · <span class="text-amber-600">67%</span><br/><span class="text-[10px] text-slate-500">10→24 · 3 ngày · PR10081</span></div>
+          <div class="gx-span" style="left: calc(270px + (100% - 270px) * 9/31); width: calc((100% - 270px) * 15/31);"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"><div class="gx-marker mk-c"></div></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"><div class="gx-marker mk-o"></div></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div>
+          <div class="gx-cell"><div class="gx-marker mk-p"></div></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"><div class="gx-marker mk-p"></div></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+        </div>
+
+        <!-- CP41: span 8..18, chưa PR -->
+        <div class="gx-row bg-red-50">
+          <div class="gx-label"><b>CP41</b> · LI3BC06 · <span class="text-red-600">0% ⚠️</span><br/><span class="text-[10px] text-red-600">08→18 · 2 ngày · CHƯA GÁN PR</span></div>
+          <div class="gx-span" style="left: calc(270px + (100% - 270px) * 7/31); width: calc((100% - 270px) * 11/31); background:#fee2e2; border-color:#fca5a5;"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"><div class="gx-marker mk-x"></div></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"><div class="gx-marker mk-x"></div></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div><div class="gx-cell"></div>
+          <div class="gx-cell"></div><div class="gx-cell"></div>
+        </div>
+
+        <!-- Today vertical line: between day 11/12 -->
+        <div class="gx-today" style="left: calc(270px + (100% - 270px) * 11.5/31);"></div>
+      </div>
+      <p class="text-xs text-slate-400 italic mt-1 text-center">… 74 task khác</p>
+
+      <h3 class="font-semibold text-sm mt-6">🧑 Tải nguồn lực — utilization từng PR</h3>
+      <p class="text-xs text-slate-500 mt-1">Nếu Util &gt; 100% → PR overload, cần phân lại.</p>
+      <div class="overflow-x-auto mt-2 border rounded">
+        <table class="w-full text-xs">
+          <thead class="bg-slate-100 text-left">
+            <tr><th class="p-2">PR</th><th>BC</th><th>Grupo</th><th>Loại</th>
+                <th>Đã xếp</th><th>Capacity</th><th>Util %</th><th></th></tr>
+          </thead>
+          <tbody>
+            <tr class="border-t"><td class="p-2 font-mono">LI3PR10091</td><td>LI3BC07</td><td>Grupo 1</td><td>Exclusive</td>
+              <td>8</td><td>25</td>
+              <td><div class="bg-slate-200 rounded h-2 w-24"><div class="bg-green-500 h-2 rounded" style="width:32%"></div></div></td>
+              <td class="text-green-600">✓</td></tr>
+            <tr class="border-t"><td class="p-2 font-mono">LI3PR10183</td><td>LI3BC10</td><td>Grupo 2</td><td>Exclusive</td>
+              <td>7</td><td>25</td>
+              <td><div class="bg-slate-200 rounded h-2 w-24"><div class="bg-green-500 h-2 rounded" style="width:28%"></div></div></td>
+              <td class="text-green-600">✓</td></tr>
+            <tr class="border-t"><td class="p-2 font-mono">LI3PR10139</td><td>LI3BC06</td><td>Grupo 4</td><td>Exclusive</td>
+              <td>7</td><td>25</td>
+              <td><div class="bg-slate-200 rounded h-2 w-24"><div class="bg-green-500 h-2 rounded" style="width:28%"></div></div></td>
+              <td class="text-green-600">✓</td></tr>
+            <tr class="border-t bg-amber-50"><td class="p-2 font-mono">LI3PR10175</td><td>LI3BC11</td><td>Grupo 3</td><td>Part-time</td>
+              <td>16</td><td>18</td>
+              <td><div class="bg-slate-200 rounded h-2 w-24"><div class="bg-amber-500 h-2 rounded" style="width:89%"></div></div></td>
+              <td class="text-amber-600">~ gần đầy</td></tr>
+            <tr class="border-t bg-red-50"><td class="p-2 font-mono">LI3PR10202</td><td>LI3BC11</td><td>Grupo 4</td><td>Nuevo</td>
+              <td>22</td><td>18</td>
+              <td><div class="bg-slate-200 rounded h-2 w-24"><div class="bg-red-500 h-2 rounded" style="width:100%"></div></div></td>
+              <td class="text-red-600 font-semibold">⚠️ Vượt 4</td></tr>
+            <tr class="border-t bg-red-50"><td class="p-2 font-mono">LI3PR10081</td><td>LI3BC08</td><td>Grupo 1</td><td>Exclusive</td>
+              <td>27</td><td>25</td>
+              <td><div class="bg-slate-200 rounded h-2 w-24"><div class="bg-red-500 h-2 rounded" style="width:100%"></div></div></td>
+              <td class="text-red-600 font-semibold">⚠️ Vượt 2</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 class="font-semibold text-sm mt-6">⚠️ Bảng xung đột (Conflict Detector)</h3>
+      <div class="grid grid-cols-3 gap-2 mt-2 text-xs">
+        <div class="border rounded p-2 bg-red-50"><div>🔴 HIGH</div><b class="text-lg text-red-600">2</b></div>
+        <div class="border rounded p-2 bg-orange-50"><div>🟠 MED</div><b class="text-lg text-orange-600">2</b></div>
+        <div class="border rounded p-2 bg-yellow-50"><div>🟡 LOW</div><b class="text-lg text-yellow-700">3</b></div>
+      </div>
+      <table class="w-full text-xs mt-2 border">
+        <thead class="bg-slate-100 text-left">
+          <tr><th class="p-2">Severity</th><th>Loại</th><th>Ngày</th><th>Đối tượng</th><th>Chi tiết</th></tr>
+        </thead>
+        <tbody>
+          <tr class="border-t bg-red-50"><td class="p-2">🔴 HIGH</td><td>PR overlap</td><td>2026-05-01</td><td class="font-mono">LI3PR10183</td>
+            <td>LI3PR10183 có <b>2 campaign</b> cùng ngày tại CP25, CP79</td></tr>
+          <tr class="border-t bg-red-50"><td class="p-2">🔴 HIGH</td><td>PR overlap</td><td>2026-05-04</td><td class="font-mono">LI3PR10183</td>
+            <td>LI3PR10183 có <b>2 campaign</b> cùng ngày tại CP27, CP28</td></tr>
+          <tr class="border-t bg-orange-50"><td class="p-2">🟠 MED</td><td>Vượt capacity</td><td>—</td><td class="font-mono">LI3PR10202</td>
+            <td>LI3PR10202: 22 ca &gt; capacity 18 (<b>vượt 4 ngày</b>)</td></tr>
+          <tr class="border-t bg-orange-50"><td class="p-2">🟠 MED</td><td>Vượt capacity</td><td>—</td><td class="font-mono">LI3PR10081</td>
+            <td>LI3PR10081: 27 ca &gt; capacity 25 (<b>vượt 2 ngày</b>)</td></tr>
+          <tr class="border-t bg-yellow-50"><td class="p-2">🟡 LOW</td><td>Chưa phân PR</td><td>2026-05-08</td><td class="font-mono">CP41</td>
+            <td>CMP-202605-CP41-01 chưa có PR</td></tr>
+          <tr class="border-t bg-yellow-50"><td class="p-2">🟡 LOW</td><td>Chưa phân PR</td><td>2026-05-18</td><td class="font-mono">CP41</td>
+            <td>CMP-202605-CP41-02 chưa có PR</td></tr>
+          <tr class="border-t bg-yellow-50"><td class="p-2">🟡 LOW</td><td>Ngoài lịch traffic</td><td>2026-05-04</td><td class="font-mono">CP27</td>
+            <td>CMP-202605-CP27-02: lịch yêu cầu SUNDAY, nhưng xếp ngày 2026-05-04 (Mon)</td></tr>
+        </tbody>
+      </table>
+
+      <div class="mt-4 bg-slate-50 border rounded p-3 text-xs">
+        <b class="text-slate-900">📖 Quy tắc phát hiện xung đột:</b>
+        <ul class="list-disc pl-5 mt-1 space-y-0.5 text-slate-700">
+          <li>🔴 <b>PR overlap</b> — cùng 1 PR bị xếp ≥ 2 campaign trong cùng 1 ngày.</li>
+          <li>🔴 <b>Vị trí trùng</b> — cùng 1 Ubicacion có ≥ 2 campaign cùng ngày (rule cấm).</li>
+          <li>🟠 <b>Vượt capacity</b> — tổng ca xếp cho PR &gt; <span class="kbd">cantidad_dia_trabajo</span>.</li>
+          <li>🟡 <b>Chưa phân PR</b> — campaign DRAFT chưa có ai làm.</li>
+          <li>🟡 <b>Ngoài lịch traffic</b> — ngày không khớp <span class="kbd">Fecha Alta Traffico</span>.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROCESS DOCS -->
+  <div id="screen-process" class="screen">
+    <div class="bg-white rounded-xl shadow-sm p-6 space-y-5 text-sm">
+      <h2 class="text-lg font-bold">📖 Giải thích quy trình nhập liệu &amp; quản lý kế hoạch</h2>
+
+      <section>
+        <h3 class="font-bold text-blue-800">1. Setup ban đầu — Master Data</h3>
+        <p class="text-slate-600">Trước khi sinh kế hoạch, hệ thống cần 2 nguồn dữ liệu gốc:</p>
+        <div class="grid grid-cols-2 gap-3 mt-2">
+          <div class="border-l-4 border-blue-500 bg-blue-50 p-3">
+            <b>📍 Ubicacion</b> (điểm bán)
+            <ul class="list-disc pl-5 mt-1 text-slate-700">
+              <li>BR, BC, Distrito, Tipo (Mercado/BTS/Rural/...)</li>
+              <li><b>Prioridad</b>: 1 = cao nhất, 2 = thứ 2, ...</li>
+              <li><b>Lịch traffic</b>: WEEKDAY / WEEKEND / MONDAY..SUNDAY</li>
+              <li>Toạ độ GPS</li>
+              <li>Meta/Gasto/Merch mặc định (sẽ kế thừa cho campaign)</li>
+            </ul>
+          </div>
+          <div class="border-l-4 border-purple-500 bg-purple-50 p-3">
+            <b>👥 PR / Grupo</b> (nhân lực)
+            <ul class="list-disc pl-5 mt-1 text-slate-700">
+              <li>PR Code (mã promoter), BC, Grupo</li>
+              <li>Tipo: Exclusive / Part-time / Nuevo</li>
+              <li>Leader (AF/BC)</li>
+              <li>KPI Trabajo, <b>Cantidad ngày làm/tháng</b></li>
+              <li>Estado: OK / NO OK</li>
+            </ul>
+          </div>
+        </div>
+        <p class="text-xs text-slate-500 mt-2">💡 Có thể nhập tay từng dòng, bulk editor, hoặc <b>Import từ file Excel mẫu</b>.</p>
+      </section>
+
+      <section>
+        <h3 class="font-bold text-blue-800">2. Sinh kế hoạch tháng — Plan Generator</h3>
+        <ol class="list-decimal pl-5 text-slate-700 space-y-1">
+          <li>Chọn năm + tháng (vd. 2026/05).</li>
+          <li>Tick "Xoá DRAFT cũ" (giữ PLANNED/RUNNING/DONE).</li>
+          <li>Bấm <b>🚀 Sinh kế hoạch</b>.</li>
+          <li>Hệ thống chạy <b>4 pass</b> theo thứ tự ưu tiên:
+            <table class="w-full mt-1 text-xs border">
+              <thead class="bg-slate-100"><tr><th class="p-1 text-left">Pass</th><th>Tiêu chí</th><th>Mục đích</th></tr></thead>
+              <tbody>
+                <tr class="border-t"><td class="p-1">1</td><td>cùng BC + đúng lịch traffic</td><td>Tối ưu</td></tr>
+                <tr class="border-t"><td class="p-1">2</td><td>khác BC + đúng lịch traffic</td><td>Bù thiếu nhân lực BC</td></tr>
+                <tr class="border-t"><td class="p-1">3</td><td>cùng BC + ngoài lịch traffic</td><td>Đủ cantidad_dia</td></tr>
+                <tr class="border-t"><td class="p-1">4</td><td>chưa có PR</td><td>Slot trống để gán tay</td></tr>
+              </tbody>
+            </table>
+          </li>
+          <li>Mỗi vòng: ưu tiên Ubic có <span class="kbd">prioridad</span> thấp nhất trước.</li>
+          <li>Chọn PR có <b>capacity cao nhất</b> để cân bằng tải.</li>
+          <li>Ràng buộc: 1 PR ≤ 1 ca/ngày, 1 Ubic ≤ 1 campaign/ngày, không vượt <span class="kbd">cantidad_dia_trabajo</span>.</li>
+        </ol>
+        <p class="text-xs text-amber-700 mt-2 bg-amber-50 p-2 rounded">⚠️ Tất cả campaign sinh ra là <span class="badge b-draft">DRAFT</span> — chưa có hiệu lực cho đến khi <b>duyệt</b>.</p>
+      </section>
+
+      <section>
+        <h3 class="font-bold text-blue-800">3. Duyệt &amp; phân công — Campaigns page</h3>
+        <p class="text-slate-700">BC/Manager mở trang <b>Campaigns</b> để review:</p>
+        <ul class="list-disc pl-5 text-slate-700">
+          <li><b>Kanban</b>: nhìn nhanh phân bố trạng thái — kéo điều phối tâm lý.</li>
+          <li><b>List</b>: xem chi tiết, filter theo BC/ngày/status.</li>
+          <li><b>Calendar</b>: pivot vị trí × ngày, dễ phát hiện trùng/thiếu.</li>
+          <li><b>Chi tiết</b>: chỉnh PR, ghi chú, đổi trạng thái thủ công.</li>
+        </ul>
+        <p class="text-slate-700 mt-2">Nếu mọi thứ OK, bấm <span class="kbd">✅ Duyệt toàn bộ DRAFT → PLANNED</span> bên Plan Generator để chốt lịch tháng trong 1 click.</p>
+      </section>
+
+      <section>
+        <h3 class="font-bold text-blue-800">4. Triển khai hằng ngày</h3>
+        <ol class="list-decimal pl-5 text-slate-700 space-y-1">
+          <li>Sáng: BC/Leader vào <b>Campaigns → Chi tiết</b>, chuyển các campaign hôm nay từ <span class="badge b-planned">PLANNED</span> → <span class="badge b-running">RUNNING</span>.</li>
+          <li>PR đi điểm bán, làm theo Meta của campaign.</li>
+          <li>Có sự cố? Đổi sang <span class="badge b-cancelled">CANCELLED</span> với ghi chú lý do.</li>
+        </ol>
+      </section>
+
+      <section>
+        <h3 class="font-bold text-blue-800">5. Đóng campaign — Resultados</h3>
+        <p class="text-slate-700">Cuối ngày, nhập kết quả thực tế:</p>
+        <ul class="list-disc pl-5 text-slate-700">
+          <li>Mở trang <b>Resultados</b> → chọn campaign hôm nay.</li>
+          <li>Nhập <b>Resultado</b> cho từng metric (so sánh với Meta).</li>
+          <li>Tick <b>Checklist</b>: Evidencia pago, Merch entregado, Activaciones, Digital, Campaña OK.</li>
+          <li>Ghi <b>DF/BTS Code</b> + <b>Nota</b>.</li>
+          <li>Bấm <span class="kbd">🏁 Lưu &amp; chuyển sang DONE</span>.</li>
+        </ul>
+        <p class="text-xs text-slate-500 mt-2">Mọi thay đổi đều được lưu vào <span class="kbd">campaign_log</span> để truy vết sau này.</p>
+      </section>
+
+      <section>
+        <h3 class="font-bold text-blue-800">6. Theo dõi tổng thể — Dashboard</h3>
+        <ul class="list-disc pl-5 text-slate-700">
+          <li><b>Funnel trạng thái</b>: bao nhiêu DRAFT/PLANNED/DONE — biết tiến độ tháng.</li>
+          <li><b>Meta vs Resultado</b>: % đạt theo metric (so sánh BC).</li>
+          <li><b>Chi phí kế hoạch theo BC</b>: stacked bar.</li>
+          <li><b>Tải PR</b>: ai đang quá tải / dư thời gian.</li>
+          <li><b>Bản đồ</b>: phân bố địa lý của campaign.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h3 class="font-bold text-blue-800">7. Import / Export</h3>
+        <ul class="list-disc pl-5 text-slate-700">
+          <li><b>Import</b>: upload file Excel có 2 sheet <span class="kbd">Ubicacion</span> + <span class="kbd">PR Grupo</span> giống mẫu — hệ thống parse và lưu vào DB (upsert).</li>
+          <li><b>Export</b>: chọn tháng → tải Excel gồm <span class="kbd">Campaigns</span>, <span class="kbd">Calendar</span> (pivot), <span class="kbd">Results</span>, và master data.</li>
+        </ul>
+      </section>
+
+      <section class="bg-slate-50 border rounded p-4">
+        <h3 class="font-bold">⚖️ Quy tắc bảo toàn dữ liệu (state machine)</h3>
+        <p class="text-slate-700 mt-1">Chuyển trạng thái <b>chỉ được phép</b> theo bảng dưới (validate ở backend, không bypass bằng UI):</p>
+        <table class="w-full mt-2 text-xs border">
+          <thead class="bg-slate-100"><tr><th class="p-1 text-left">Từ</th><th>Có thể chuyển sang</th></tr></thead>
+          <tbody>
+            <tr class="border-t"><td class="p-1">DRAFT</td><td>PLANNED, CANCELLED</td></tr>
+            <tr class="border-t"><td class="p-1">PLANNED</td><td>RUNNING, DONE, CANCELLED, DRAFT (rút lại)</td></tr>
+            <tr class="border-t"><td class="p-1">RUNNING</td><td>DONE, CANCELLED</td></tr>
+            <tr class="border-t"><td class="p-1">DONE</td><td>PLANNED (mở lại nếu nhập sai)</td></tr>
+            <tr class="border-t"><td class="p-1">CANCELLED</td><td>DRAFT (khôi phục)</td></tr>
+          </tbody>
+        </table>
+      </section>
+    </div>
+  </div>
+
+  </section>
+</main>
+
+<script>
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+}
+</script>
+</body>
+</html>
