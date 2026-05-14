@@ -1,115 +1,156 @@
-# ProjectWeb — MS Project clone (web app)
+# ProjectWeb + AI Sales Campaign Planner
 
-Web-based clone of Microsoft Project Desktop, targeting ~90% feature parity.
+Monorepo containing two web applications sharing a FastAPI backend and React
+frontend:
+
+1. **ProjectWeb** — a Microsoft Project clone with CPM scheduler, resource
+   leveling, EVM, XML I/O and JWT auth.
+2. **AI Sales Campaign Planner** — a sales-campaign planner specialised for
+   telecom field campaigns. Ingests `Campana Plan.xlsx`, normalises into
+   PostgreSQL, exposes 25 REST endpoints, and ships an AI Planner with seven
+   slash commands (`/goal /optimize /risk /recover /simulate /explain /daily`).
+
+## Repository layout
 
 ```
-[ React + gantt-task-react ]  ↔  [ FastAPI + SQLAlchemy + SQLite ]
-                                  ↕
-                             [ CPM Scheduling Engine ]
+backend/
+  app/
+    main.py                       FastAPI entry (72 routes)
+    config.py db/ models/ schemas/ services/ routers/   ProjectWeb (Phase 0-8)
+    sales_planner/                AI Sales Campaign Planner module
+      models/        18 ORM models
+      schemas/       Pydantic IO
+      services/      excel_import, ai_planner, constraint_solver
+      routers/       imports, sales, ai, dashboard, map, exports
+  migrations/
+    001_sales_planner.sql         20-table PostgreSQL DDL
+  Dockerfile
+  requirements.txt
+frontend/
+  src/
+    pages/SalesPlannerPage.tsx    MS-Project-style sales planner UI
+    components/AICommandBar       Copilot-style slash command bar
+    components/SalesFilterBar     BR/BC/Distrito/Tipo/Status filters + grouping
+    components/SalesGantt         Gantt (Phase 1 adapter; Phase 2 custom Canvas)
+    api/sales-client.ts           Axios client
+    lib/ai-schema.ts              TS mirror of AISalesPlan JSON schema
+  Dockerfile
+docs/sales-planner/
+  SPEC.md                         Product spec, tech stack, SLAs, phase gates
+  BACKLOG.md                      87 user stories across 6 epics
+  AI_PLANNER_SPEC.md              JSON schema, hard constraints C1..C10
+tests/backend/
+  test_excel_import.py            81 locations + 68 PR + 81 tasks parsed
+  test_ai_planner.py              stub provider + constraint C1 enforcement
+docker-compose.yml                postgres + redis + minio + api + worker + web
+Campana Plan.xlsx                 reference workbook
+mockup/                           Static HTML walkthroughs (legacy)
+legacy/streamlit/                 First-iteration Streamlit app
 ```
 
-## ✅ 8 Phases complete
+## Quick start (Docker)
 
-| Phase | Feature | Status |
-|---|---|---|
-| **0** | Foundation: FastAPI + React + SQLAlchemy skeleton | ✅ DONE |
-| **1** | Hierarchy: WBS + indent/outdent + auto rollup | ✅ DONE |
-| **2** | CPM engine: 4 link types + lag + 8 constraints + critical path | ✅ DONE |
-| **3** | Resources: WORK/MATERIAL/COST + assignment + cost rollup | ✅ DONE |
-| **4** | Baseline + Variance tracking | ✅ DONE |
-| **5** | Resource leveling: auto-resolve over-allocation | ✅ DONE |
-| **6** | EVM: BCWS/BCWP/ACWP + CV/SV + CPI/SPI + EAC/ETC/VAC/TCPI | ✅ DONE |
-| **7** | Project XML import/export | ✅ DONE |
-| **8** | Auth: JWT (HS256 stdlib) + pbkdf2 password hashing | ✅ DONE |
+```bash
+docker compose up -d            # postgres + redis + minio + api + web
+# wait ~10s for postgres healthcheck to pass
+docker compose exec api python -m app.seed.demo   # MS Project demo project
+# Upload Campana Plan.xlsx via http://localhost:5173/sales-planner
+```
 
-**47 API endpoints**. **Full UI** for all 8 phases.
+## Quick start (native)
 
-## 🚀 Setup
-
-### Backend
 ```bash
 cd backend
-python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-python3 -m app.seed.demo                  # creates demo project
-uvicorn app.main:app --reload --port 8500
-# Swagger: http://127.0.0.1:8500/docs
-```
+python -m app.seed.demo                    # creates MS Project demo
+uvicorn app.main:app --reload --port 8500  # http://127.0.0.1:8500/docs
 
-### Frontend
-```bash
-cd frontend
+cd ../frontend
 npm install
-npm run dev
-# http://localhost:5173
+npm run dev                                # http://localhost:5173
 ```
 
-## 🏗️ Architecture
+## Sales Planner workflow
 
+1. **Login** — `POST /api/auth/register` then `/login` (JWT HS256 + pbkdf2).
+2. **Import Excel** — drag `Campana Plan.xlsx` into `/sales-planner`.
+   The importer parses Ubicacion (locations), PR Grupo (staff + daily
+   allocations), Plan CP (tasks + targets + merch) and creates a campaign.
+3. **AI Planner** — type a slash command in the AI command bar:
+   - `/goal Tạo kế hoạch 30 ngày cho LI3BR, ưu tiên CP prio 1`
+   - `/optimize` `/risk` `/recover` `/simulate` `/explain` `/daily`
+   - Plan returns as JSON, schema-validated, constraint-checked.
+   - Click **Apply** to write tasks to the DB.
+4. **Gantt** — drag and resize bars; updates persist via `PATCH /sales/tasks/{id}`.
+5. **Dashboard** — per-BC Meta vs Resultado matching Sheet "General".
+6. **Map** — Leaflet markers with route-optimize endpoint for geographic
+   clustering of same-day campaigns.
+7. **Export** — download Excel matching the original column layout.
+
+## AI Planner overview
+
+| Command | Purpose |
+|---|---|
+| `/goal`     | Generate a fresh plan respecting business goal |
+| `/optimize` | Reshuffle existing plan minimising conflicts |
+| `/risk`     | Detect campaigns at risk of missing Meta |
+| `/recover`  | Build catch-up plan for under-performing BC |
+| `/simulate` | What-if scenarios (extra PR, longer days, more budget) |
+| `/explain`  | Reasoning trace for a single task |
+| `/daily`    | Today's action items per group |
+
+Hard constraints (C1..C10) include PR overlap detection, capacity caps,
+group conflicts, traffic-day matching, location duplication, geographic
+proximity, priority ordering. See `docs/sales-planner/AI_PLANNER_SPEC.md`.
+
+Provider abstraction supports OpenAI / Anthropic / Local LLMs; the default
+`StubProvider` produces deterministic, constraint-valid plans without an LLM
+bill so the pipeline (schema validation, diff, apply) is end-to-end testable
+in CI.
+
+## ProjectWeb (Phase 0-8)
+
+The existing Microsoft Project clone remains operational:
+
+- 8 ORM models (Project, Task, Dependency, Resource, Assignment, Calendar,
+  Baseline, User).
+- 24 REST endpoints under `/api/projects`, `/api/tasks`, `/api/dependencies`,
+  `/api/resources`, `/api/assignments`, `/api/baselines`, `/api/auth`.
+- CPM scheduler with forward/backward pass, 4 link types (FS/SS/FF/SF) +
+  lag, 8 constraint types (ASAP/ALAP/MSO/MFO/SNET/SNLT/FNET/FNLT),
+  calendar-aware working time math, cycle detection, summary task rollup.
+- Resource leveling with greedy auto-delay.
+- Earned Value (BAC, BCWS, BCWP, ACWP, CV, SV, CPI, SPI, EAC, ETC, VAC, TCPI).
+- Project XML import/export.
+- JWT HS256 auth with pbkdf2 password hash (stdlib only, no `cryptography`).
+
+Frontend pages: `/` ProjectList, `/projects/{id}` Gantt + Grid,
+`/projects/{id}/resources` Resources, `/tracking` Baseline + Variance,
+`/leveling` Resource Leveling, `/evm` Earned Value.
+
+## Tests
+
+```bash
+cd tests/backend
+python -m pytest -v
 ```
-backend/app/
-  main.py             FastAPI entry
-  config.py           Settings (DB URL, CORS, work hours)
-  db/session.py       SQLAlchemy + Base
-  models/             8 ORM models (Project, Task, Dependency, Resource,
-                       Assignment, Calendar, Baseline, User)
-  schemas/common.py   Pydantic schemas
-  services/
-    working_time.py   Calendar-aware datetime math
-    scheduler.py      CPM forward/backward pass + critical path
-    cost.py           Cost rollup
-    outline.py        WBS / indent / outdent
-    variance.py       Baseline variance
-    leveling.py       Resource leveling (greedy)
-    evm.py            Earned Value Management
-    xml_io.py         Project XML import/export
-    auth.py           JWT (stdlib HS256) + pbkdf2
-  routers/
-    projects.py       CRUD + schedule
-    advanced.py       Phase 1, 3, 4, 5, 6, 7 endpoints
-    auth.py           Phase 8 register/login/me
-  seed/demo.py        Sample project (Xây nhà)
 
-frontend/src/
-  App.tsx             React Router + AuthGuard
-  api/client.ts       Axios client
-  pages/
-    LoginPage.tsx
-    ProjectListPage.tsx
-    ProjectViewPage.tsx (Gantt + Grid)
-    ResourcesPage.tsx
-    TrackingPage.tsx
-    LevelingPage.tsx
-    EvmPage.tsx
-  components/TaskGrid/TaskGrid.tsx
-```
+Smoke suite (4 tests passing): Excel import roundtrip (81 locations,
+68 PR, 81 tasks, 3,683 daily plans), AI stub provider response,
+C1 constraint enforcement, Excel serial-date conversion.
 
-## 📐 Scheduler conventions
+## Phase roadmap
 
-- Duration unit: **working hours** (1 day = 8h with Standard Calendar).
-- Standard Calendar: Mon–Fri, 08:00–12:00 + 13:00–17:00.
-- Lag: positive = delay, negative = lead (overlap).
-- Summary tasks excluded from CPM; their dates are rolled up from children.
-- Milestones: duration = 0; start = finish.
-- Critical threshold: total_slack ≤ 0.5h.
+| Phase | Output |
+|---|---|
+| 0–8 (ProjectWeb) | ✅ Done — CPM, leveling, EVM, XML, auth |
+| Sales Planner Phase 1 | ✅ Foundation — import, AI stub, 25 endpoints, scaffold UI |
+| Sales Planner Phase 2 | Custom Canvas Gantt for MS-Project parity |
+| Sales Planner Phase 3 | Real LLM integration (OpenAI/Anthropic) |
+| Sales Planner Phase 4 | Dashboard view + Leaflet map + AI route-optimize |
+| Sales Planner Phase 5 | OR-Tools CP-SAT constraint optimiser |
+| Sales Planner Phase 6 | QA, perf, security, full CI/CD |
 
-## 🧪 Verified on demo project ("Xây nhà")
+## License
 
-8 tasks, 9 dependencies (FS + SS with lag), 4 resources, 7 assignments.
-
-```
-Schedule result:
-  project_start  = 2026-05-04 08:00
-  project_finish = 2026-06-25 08:00
-  n_critical     = 6 / 8 tasks
-  Total cost     = $17,360
-```
-
-All 8 phases verified via Python script and HTTP curl tests.
-
-## 📁 Legacy
-
-Previous Streamlit campaign manager preserved under `legacy/streamlit/`.
-Mockups under `mockup/` show static HTML walkthroughs for both:
-- `mockup/index.html` — campaign manager (D2D sales planning)
-- `mockup/projectweb/index.html` — ProjectWeb (MS Project clone)
+Proprietary — internal project. See repository owner.
