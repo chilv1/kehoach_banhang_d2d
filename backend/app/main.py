@@ -8,6 +8,11 @@ from app.config import settings
 from app.db.session import Base, engine
 from app import models  # noqa: F401
 from app.routers import advanced, auth, projects
+from app.sales_planner import models as sales_models  # noqa: F401
+from app.sales_planner.routers import (
+    ai_router, dashboard_router, exports_router, imports_router,
+    map_router, sales_router,
+)
 
 
 @asynccontextmanager
@@ -33,6 +38,14 @@ app.add_middleware(
 app.include_router(projects.router, prefix="/api", tags=["projects"])
 app.include_router(advanced.router, prefix="/api", tags=["advanced"])
 app.include_router(auth.router, prefix="/api", tags=["auth"])
+
+# Sales Campaign Planner module
+app.include_router(imports_router, prefix="/api")
+app.include_router(sales_router, prefix="/api")
+app.include_router(ai_router, prefix="/api")
+app.include_router(dashboard_router, prefix="/api")
+app.include_router(map_router, prefix="/api")
+app.include_router(exports_router, prefix="/api")
 
 
 @app.get("/")
